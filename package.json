@@ -1,7 +1,7 @@
 {
-  "name": "bible-song-pro-vmix-desktop",
+  "name": "sda-bible-song-pro",
   "version": "1.0.0",
-  "description": "Bible Song Pro desktop preview wrapper for macOS",
+  "description": "Bible Song for SDA Hymns and Bible",
   "main": "electron/main.js",
   "author": "East Kampala SDA Church",
   "private": true,
@@ -15,7 +15,7 @@
     "dist:linux": "electron-builder --linux"
   },
   "build": {
-    "appId": "com.biblesongpro.desktop",
+    "appId": "com.sdabiblesongpro.desktop",
     "productName": "Bible Song Pro",
     "files": [
       "Bible Song Pro panel.html",
