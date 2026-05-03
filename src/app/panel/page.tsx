@@ -295,6 +295,10 @@ export default function PanelPage() {
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [showNewSongModal, setShowNewSongModal] = useState(false);
   const [newSongTitle, setNewSongTitle] = useState("");
+  const [lyricsEditorContent, setLyricsEditorContent] = useState("");
+  const [showTranslationPanel, setShowTranslationPanel] = useState(false);
+  const [translationContent, setTranslationContent] = useState("");
+  const [bilingualEnabled, setBilingualEnabled] = useState(false);
 
   // Editor mode
   const [editorMode, setEditorMode] = useState<"text" | "buttons">("buttons");
@@ -838,6 +842,50 @@ export default function PanelPage() {
             </div>
           ) : (
             <div className="p-4 space-y-4">
+              {activeTab === "songs" && selectedSong && (
+                <>
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Lyrics Editor</CardTitle></CardHeader>
+                    <CardContent className="space-y-4">
+                      <textarea 
+                        className="w-full h-48 p-3 rounded-md border border-input bg-background font-mono text-sm resize-none" 
+                        placeholder="Type or paste lyrics here..." 
+                        value={lyricsEditorContent} 
+                        onChange={(e) => setLyricsEditorContent(e.target.value)}
+                      />
+                      <div className="flex items-center justify-between">
+                        <Button variant="outline" size="sm" onClick={() => setShowTranslationPanel(!showTranslationPanel)}><TypeIcon className="h-3 w-3 mr-1" /> Translation</Button>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Word count: {lyricsEditorContent.split(/\s+/).filter(Boolean).length}</span>
+                        </div>
+                      </div>
+                      {showTranslationPanel && (
+                        <Card className="bg-muted/50">
+                          <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><TypeIcon className="h-3 w-3" /> Translation</CardTitle></CardHeader>
+                          <CardContent className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Checkbox id="bilingual" checked={bilingualEnabled} onCheckedChange={(c) => setBilingualEnabled(!!c)} />
+                                <label htmlFor="bilingual" className="text-xs">Show bilingual globally</label>
+                              </div>
+                              <div className="flex gap-1">
+                                <Button variant="outline" size="sm">Update</Button>
+                                <Button variant="outline" size="sm">Remove</Button>
+                              </div>
+                            </div>
+                            <textarea 
+                              className="w-full h-32 p-3 rounded-md border border-input bg-background font-mono text-sm resize-none" 
+                              placeholder="Translated lyrics will appear here..." 
+                              value={translationContent} 
+                              onChange={(e) => setTranslationContent(e.target.value)}
+                            />
+                          </CardContent>
+                        </Card>
+                      )}
+                    </CardContent>
+                  </Card>
+                </>
+              )}
               {activeTab === "bible" && selectedBook && (
                 <Card>
                   <CardHeader><CardTitle className="text-sm">Select Passage</CardTitle></CardHeader>
