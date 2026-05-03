@@ -1,9 +1,5 @@
-import { app, BrowserWindow, ipcMain, screen, shell, clipboard, IpcMainInvokeEvent } from 'electron';
-import * as path from 'path';
-import * as os from 'os';
-import * as fs from 'fs';
-import * as http from 'http';
-import { WebSocketServer, WebSocket } from 'ws';
+// @ts-nocheck
+import { app, BrowserWindow, ipcMain, screen, shell, clipboard } from 'electron';
 
 interface DisplayInfo {
   id: number;

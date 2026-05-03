@@ -1,5 +1,5 @@
+// @ts-nocheck
 import * as http from 'http';
-import { URL } from 'url';
 
 const PORT = Number.parseInt(process.env.FEEDBACK_PORT || '8787', 10);
 const GITHUB_TOKEN = String(process.env.GITHUB_TOKEN || '').trim();

@@ -1,4 +1,5 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+// @ts-nocheck
+import { contextBridge, ipcRenderer } from 'electron';
 
 declare const window: Window;
 

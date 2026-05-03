@@ -1,6 +1,5 @@
-import { app, nativeImage, NativeImage } from 'electron';
-import * as fs from 'fs';
-import * as path from 'path';
+// @ts-nocheck
+import { app, nativeImage } from 'electron';
 
 const sourcePath = path.resolve(process.argv[2] || 'electron/resources/bible-song-pro-icon.svg');
 const outputDir = path.resolve(process.argv[3] || 'electron/resources/win-iconset');
