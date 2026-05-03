@@ -374,13 +374,38 @@ export default function PanelPage() {
   const fetchChapter = async (book: string, chapter: number, translation: string = "KJV") => {
     try {
       // bible.helloao.org uses format like "/api/KJV/GEN/1.json"
-      const bookId = book.toUpperCase().substring(0, 3); // Convert to 3-letter book ID
+      // Convert book names to standard 3-letter codes
+      const bookMapping: { [key: string]: string } = {
+        'Genesis': 'GEN', 'Exodus': 'EXO', 'Leviticus': 'LEV', 'Numbers': 'NUM', 'Deuteronomy': 'DEU',
+        'Joshua': 'JOS', 'Judges': 'JDG', 'Ruth': 'RUT', '1 Samuel': '1SA', '2 Samuel': '2SA',
+        '1 Kings': '1KI', '2 Kings': '2KI', '1 Chronicles': '1CH', '2 Chronicles': '2CH',
+        'Ezra': 'EZR', 'Nehemiah': 'NEH', 'Esther': 'EST', 'Job': 'JOB', 'Psalms': 'PSA',
+        'Proverbs': 'PRO', 'Ecclesiastes': 'ECC', 'Song of Solomon': 'SNG', 'Isaiah': 'ISA',
+        'Jeremiah': 'JER', 'Lamentations': 'LAM', 'Ezekiel': 'EZE', 'Daniel': 'DAN',
+        'Hosea': 'HOS', 'Joel': 'JOL', 'Amos': 'AMO', 'Obadiah': 'OBA', 'Jonah': 'JON',
+        'Micah': 'MIC', 'Nahum': 'NAM', 'Habakkuk': 'HAB', 'Zephaniah': 'ZEP', 'Haggai': 'HAG',
+        'Zechariah': 'ZEC', 'Malachi': 'MAL', 'Matthew': 'MAT', 'Mark': 'MRK', 'Luke': 'LUK',
+        'John': 'JHN', 'Acts': 'ACT', 'Romans': 'ROM', '1 Corinthians': '1CO', '2 Corinthians': '2CO',
+        'Galatians': 'GAL', 'Ephesians': 'EPH', 'Philippians': 'PHP', 'Colossians': 'COL',
+        '1 Thessalonians': '1TH', '2 Thessalonians': '2TH', '1 Timothy': '1TI', '2 Timothy': '2TI',
+        'Titus': 'TIT', 'Philemon': 'PHM', 'Hebrews': 'HEB', 'James': 'JAS', '1 Peter': '1PE',
+        '2 Peter': '2PE', '1 John': '1JN', '2 John': '2JN', '3 John': '3JN', 'Jude': 'JUD',
+        'Revelation': 'REV'
+      };
+
+      const bookId = bookMapping[book] || book.toUpperCase().substring(0, 3);
       const response = await fetch(`https://bible.helloao.org/api/${translation}/${bookId}/${chapter}.json`);
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
       const chapterData = await response.json();
       return chapterData;
     } catch (error) {
-      console.error('Failed to fetch chapter:', error);
-      return null;
+      console.error('Failed to fetch chapter from bible.helloao.org:', error);
+      // Fallback to a simple error message
+      return { error: 'Failed to load Bible chapter', fallback: true };
     }
   };
 
@@ -529,16 +554,24 @@ export default function PanelPage() {
     setIsFetchingLyrics(true);
     try {
       const chapterData = await fetchChapter(book.name, chapter, bibleVersion);
+
+      if (chapterData && chapterData.error) {
+        // API failed, show fallback message
+        setFetchedLyrics([`Unable to load ${book.name} ${chapter} from ${bibleVersion}. Please check your internet connection or try again later.`]);
+        setLineCursor(0);
+        return;
+      }
+
       if (chapterData && chapterData.chapter && chapterData.chapter.content) {
         let content = '';
         const startVerse = verses?.start || 1;
         const endVerse = verses?.end || 999; // High number to include all verses
 
         // Parse the complex content structure from bible.helloao.org
-        const verses = chapterData.chapter.content.filter((item: any) => item.type === 'verse');
+        const chapterVerses = chapterData.chapter.content.filter((item: any) => item.type === 'verse');
 
-        for (let i = startVerse - 1; i < Math.min(endVerse, verses.length); i++) {
-          const verse = verses[i];
+        for (let i = startVerse - 1; i < Math.min(endVerse, chapterVerses.length); i++) {
+          const verse = chapterVerses[i];
           if (verse && verse.content) {
             // Extract text from verse content array
             let verseText = '';
@@ -546,8 +579,9 @@ export default function PanelPage() {
               verseText = verse.content.map((part: any) => {
                 if (typeof part === 'string') return part;
                 if (part && typeof part === 'object' && part.text) return part.text;
+                if (part && typeof part === 'object' && part.noteId !== undefined) return ''; // Skip footnotes
                 return '';
-              }).join(' ');
+              }).join(' ').trim();
             } else if (typeof verse.content === 'string') {
               verseText = verse.content;
             }
@@ -560,11 +594,11 @@ export default function PanelPage() {
         setLineCursor(0);
       } else {
         console.warn('No chapter content found in API response:', chapterData);
-        setFetchedLyrics([]);
+        setFetchedLyrics([`No content available for ${book.name} ${chapter}.`]);
       }
     } catch (error) {
       console.error('Failed to load chapter:', error);
-      setFetchedLyrics([]);
+      setFetchedLyrics([`Error loading ${book.name} ${chapter}. Please try again.`]);
     } finally {
       setIsFetchingLyrics(false);
     }
