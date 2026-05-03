@@ -303,6 +303,7 @@ export default function PanelPage() {
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [showNewSongModal, setShowNewSongModal] = useState(false);
   const [newSongTitle, setNewSongTitle] = useState("");
+  const [newSongArtist, setNewSongArtist] = useState("");
   const [lyricsEditorContent, setLyricsEditorContent] = useState("");
   const [showTranslationPanel, setShowTranslationPanel] = useState(false);
   const [translationContent, setTranslationContent] = useState("");
@@ -598,6 +599,43 @@ export default function PanelPage() {
           </div>
         </div>
       )}
+      {showNewSongModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowNewSongModal(false)}>
+          <div className="bg-card border rounded-lg shadow-lg w-full max-w-2xl p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold">Create New Song</h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowNewSongModal(false)}><X className="h-4 w-4" /></Button>
+            </div>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Title</Label>
+                  <Input placeholder="Song title..." value={newSongTitle} onChange={(e) => setNewSongTitle(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Artist</Label>
+                  <Input placeholder="Artist name..." value={newSongArtist} onChange={(e) => setNewSongArtist(e.target.value)} />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowNewSongModal(false)}>Cancel</Button>
+                <Button onClick={() => {
+                  const num = songs.length + 1;
+                  setSongs([...songs, {
+                    id: `new-${num}`,
+                    number: num,
+                    title: newSongTitle || `New Song ${num}`,
+                    lyrics: []
+                  }]);
+                  setNewSongTitle("");
+                  setNewSongArtist("");
+                  setShowNewSongModal(false);
+                }}>Create</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {showSettingsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowSettingsModal(false)}>
           <div className="bg-card border rounded-lg shadow-lg w-[800px] max-h-[80vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
@@ -829,7 +867,7 @@ export default function PanelPage() {
             </TabsList>
           </Tabs>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => { const num = songs.length + 1; setSongs([...songs, { id: `new-${num}`, number: num, title: `New Song ${num}` }]); }}><Plus className="h-4 w-4 mr-1" /> Add</Button>
+            <Button variant="outline" size="sm" onClick={() => setShowNewSongModal(true)}><Plus className="h-4 w-4 mr-1" /> Add</Button>
             <div className="flex items-center rounded-md border border-input bg-background p-0.5">
               <Button variant={editorMode === "text" ? "secondary" : "ghost"} size="sm" className="h-7 px-2 text-xs" onClick={() => setEditorMode("text")}>Text</Button>
               <Button variant={editorMode === "buttons" ? "secondary" : "ghost"} size="sm" className="h-7 px-2 text-xs" onClick={() => setEditorMode("buttons")}>Buttons</Button>
@@ -1021,46 +1059,66 @@ export default function PanelPage() {
             <div className="p-4 space-y-4">
               {activeTab === "songs" && selectedSong && (
                 <>
-                  <Card>
-                    <CardHeader className="pb-2"><CardTitle className="text-sm">Lyrics Editor</CardTitle></CardHeader>
-                    <CardContent className="space-y-4">
-                      <textarea 
-                        className="w-full h-48 p-3 rounded-md border border-input bg-background font-mono text-sm resize-none" 
-                        placeholder="Type or paste lyrics here..." 
-                        value={lyricsEditorContent} 
-                        onChange={(e) => setLyricsEditorContent(e.target.value)}
-                      />
-                      <div className="flex items-center justify-between">
-                        <Button variant="outline" size="sm" onClick={() => setShowTranslationPanel(!showTranslationPanel)}><TypeIcon className="h-3 w-3 mr-1" /> Translation</Button>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">Word count: {lyricsEditorContent.split(/\s+/).filter(Boolean).length}</span>
+                  {editorMode === "text" && (
+                    <Card>
+                      <CardHeader className="pb-2"><CardTitle className="text-sm">Lyrics Editor</CardTitle></CardHeader>
+                      <CardContent className="space-y-4">
+                        <textarea
+                          className="w-full h-48 p-3 rounded-md border border-input bg-background font-mono text-sm resize-none"
+                          placeholder="Type or paste lyrics here..."
+                          value={lyricsEditorContent}
+                          onChange={(e) => setLyricsEditorContent(e.target.value)}
+                        />
+                        <div className="flex items-center justify-between">
+                          <Button variant="outline" size="sm" onClick={() => setShowTranslationPanel(!showTranslationPanel)}><TypeIcon className="h-3 w-3 mr-1" /> Translation</Button>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Word count: {lyricsEditorContent.split(/\s+/).filter(Boolean).length}</span>
+                          </div>
                         </div>
-                      </div>
-                      {showTranslationPanel && (
-                        <Card className="bg-muted/50">
-                          <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><TypeIcon className="h-3 w-3" /> Translation</CardTitle></CardHeader>
-                          <CardContent className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <Checkbox id="bilingual" checked={bilingualEnabled} onCheckedChange={(c) => setBilingualEnabled(!!c)} />
-                                <label htmlFor="bilingual" className="text-xs">Show bilingual globally</label>
+                        {showTranslationPanel && (
+                          <Card className="bg-muted/50">
+                            <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><TypeIcon className="h-3 w-3" /> Translation</CardTitle></CardHeader>
+                            <CardContent className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Checkbox id="bilingual" checked={bilingualEnabled} onCheckedChange={(c) => setBilingualEnabled(!!c)} />
+                                  <label htmlFor="bilingual" className="text-xs">Show bilingual globally</label>
+                                </div>
+                                <div className="flex gap-1">
+                                  <Button variant="outline" size="sm">Update</Button>
+                                  <Button variant="outline" size="sm">Remove</Button>
+                                </div>
                               </div>
-                              <div className="flex gap-1">
-                                <Button variant="outline" size="sm">Update</Button>
-                                <Button variant="outline" size="sm">Remove</Button>
-                              </div>
-                            </div>
-                            <textarea 
-                              className="w-full h-32 p-3 rounded-md border border-input bg-background font-mono text-sm resize-none" 
-                              placeholder="Translated lyrics will appear here..." 
-                              value={translationContent} 
-                              onChange={(e) => setTranslationContent(e.target.value)}
-                            />
-                          </CardContent>
-                        </Card>
-                      )}
-                    </CardContent>
-                  </Card>
+                              <textarea
+                                className="w-full h-32 p-3 rounded-md border border-input bg-background font-mono text-sm resize-none"
+                                placeholder="Translated lyrics will appear here..."
+                                value={translationContent}
+                                onChange={(e) => setTranslationContent(e.target.value)}
+                              />
+                            </CardContent>
+                          </Card>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+                  {editorMode === "buttons" && (
+                    <Card>
+                      <CardHeader className="pb-2"><CardTitle className="text-sm">Lyrics Editor (Buttons)</CardTitle></CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-4 gap-2">
+                          {selectedSong?.lyrics?.map((line, index) => (
+                            <Button key={index} variant="outline" size="sm" className="text-left h-auto py-2 px-3">
+                              <span className="text-xs">{line}</span>
+                            </Button>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm">Add Line</Button>
+                          <Button variant="outline" size="sm">Edit</Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </>
               )}
               {activeTab === "bible" && selectedBook && (
