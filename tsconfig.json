@@ -12,8 +12,12 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "."
+    "rootDir": "./src",
+    "typeRoots": ["./node_modules/@types"],
+    "paths": {
+      "electron": ["./node_modules/electron"]
+    }
   },
-  "include": ["electron/**/*", "server/**/*"],
-  "exclude": ["node_modules", "dist", "js", "ts-dist"]
+  "include": ["src/electron/**/*", "src/server/**/*"],
+  "exclude": ["node_modules", "dist", "js", "ts-dist", "src/features/**/*", "src/shared/**/*", "src/core/**/*"]
 }

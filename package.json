@@ -2,7 +2,7 @@
   "name": "sda-bible-song-pro",
   "version": "1.0.0",
   "description": "Bible Song for SDA Hymns and Bible",
-  "main": "dist/electron/main.js",
+  "main": "dist/server/main.js",
   "author": "East Kampala SDA Church",
   "private": true,
   "scripts": {

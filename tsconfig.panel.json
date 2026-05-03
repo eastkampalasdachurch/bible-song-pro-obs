@@ -13,6 +13,6 @@
     "outDir": "./ts-dist",
     "rootDir": "./src"
   },
-  "include": ["src/panel/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "src/shared/types/**/*.ts", "src/shared/utils/**/*.ts", "src/shared/constants/**/*.ts"]
 }
