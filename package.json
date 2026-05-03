@@ -5,11 +5,13 @@
   "main": "dist/electron/main.js",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "bun run build:next && bun run build:electron",
+    "build:next": "next build",
+    "build:electron": "tsc -p tsconfig.electron.json",
     "build:electron": "tsc -p tsconfig.electron.json",
     "start": "next start",
     "lint": "eslint",
-    "electron:dev": "powershell -File scripts/start-electron-dev.ps1",
+    "electron:dev": "node scripts/start-electron-dev.js",
     "electron:start": "bun run build:electron && npx electron .",
     "electron:build": "bun run build && bun run build:electron && npx electron-builder --win portable"
   },
