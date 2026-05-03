@@ -1,12 +1,16 @@
-const http = require('http');
-const { URL } = require('url');
+import * as http from 'http';
+import { URL } from 'url';
 
 const PORT = Number.parseInt(process.env.FEEDBACK_PORT || '8787', 10);
 const GITHUB_TOKEN = String(process.env.GITHUB_TOKEN || '').trim();
 const GITHUB_REPO = String(process.env.GITHUB_REPO || 'Johnbatey/bible-song-pro-obs').trim();
 const ALLOWED_ORIGIN = String(process.env.FEEDBACK_ALLOWED_ORIGIN || '*').trim() || '*';
 
-function sendJson(res, statusCode, payload) {
+interface JsonResponse {
+  [key: string]: unknown;
+}
+
+function sendJson(res: http.ServerResponse, statusCode: number, payload: JsonResponse): void {
   res.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
     'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
@@ -16,10 +20,10 @@ function sendJson(res, statusCode, payload) {
   res.end(JSON.stringify(payload));
 }
 
-function readJsonBody(req) {
+function readJsonBody(req: http.IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {
     let raw = '';
-    req.on('data', (chunk) => {
+    req.on('data', (chunk: string) => {
       raw += chunk;
       if (raw.length > 1024 * 1024) {
         reject(new Error('Payload too large.'));
@@ -37,16 +41,16 @@ function readJsonBody(req) {
   });
 }
 
-function normalizeIssueTitle(title, message) {
+function normalizeIssueTitle(title: string, message: string): string {
   const fromTitle = String(title || '').trim();
   if (fromTitle) return fromTitle.slice(0, 120);
   const firstLine = String(message || '').split('\n').find((line) => line.trim()) || 'Feedback';
   return `Feedback: ${firstLine.trim().slice(0, 72)}`;
 }
 
-function normalizeIssueBody(body, message, context = {}) {
+function normalizeIssueBody(body: string, message: string, context: Record<string, unknown> = {}): string {
   const content = String(body || message || '').trim();
-  const details = [];
+  const details: string[] = [];
   if (context.hostMode) details.push(`Host mode: ${context.hostMode}`);
   if (context.workspaceLayout) details.push(`Workspace layout: ${context.workspaceLayout}`);
   if (context.activeTab) details.push(`Active tab: ${context.activeTab}`);
@@ -55,7 +59,19 @@ function normalizeIssueBody(body, message, context = {}) {
   return `${content}${footer}`.trim();
 }
 
-async function createGitHubIssue(payload) {
+interface IssuePayload {
+  title?: string;
+  body?: string;
+  message?: string;
+  context?: Record<string, unknown>;
+}
+
+interface GitHubIssueResult {
+  issueNumber: number;
+  issueUrl: string;
+}
+
+async function createGitHubIssue(payload: IssuePayload): Promise<GitHubIssueResult> {
   if (!GITHUB_TOKEN) {
     throw new Error('Missing GITHUB_TOKEN on backend.');
   }
@@ -63,8 +79,8 @@ async function createGitHubIssue(payload) {
     throw new Error('GITHUB_REPO must look like "owner/repo".');
   }
 
-  const issueTitle = normalizeIssueTitle(payload.title, payload.message);
-  const issueBody = normalizeIssueBody(payload.body, payload.message, payload.context);
+  const issueTitle = normalizeIssueTitle(payload.title || '', payload.message || '');
+  const issueBody = normalizeIssueBody(payload.body || '', payload.message || '', payload.context || {});
   if (!issueBody) {
     throw new Error('Feedback message is required.');
   }
@@ -86,13 +102,13 @@ async function createGitHubIssue(payload) {
 
   const json = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const githubError = json && json.message ? String(json.message) : `GitHub API request failed (${response.status}).`;
+    const githubError = json && typeof json === 'object' && 'message' in json ? String((json as Record<string, unknown>).message) : `GitHub API request failed (${response.status}).`;
     throw new Error(githubError);
   }
 
   return {
-    issueNumber: json.number,
-    issueUrl: json.html_url
+    issueNumber: (json as { number: number }).number,
+    issueUrl: (json as { html_url: string }).html_url
   };
 }
 
@@ -120,7 +136,7 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'POST' && url.pathname === '/api/github-feedback') {
     try {
-      const payload = await readJsonBody(req);
+      const payload = await readJsonBody(req) as IssuePayload;
       const result = await createGitHubIssue(payload);
       sendJson(res, 200, {
         ok: true,
@@ -130,7 +146,7 @@ const server = http.createServer(async (req, res) => {
     } catch (error) {
       sendJson(res, 400, {
         ok: false,
-        error: error && error.message ? String(error.message) : 'Unable to create GitHub issue.'
+        error: error && error instanceof Error ? error.message : 'Unable to create GitHub issue.'
       });
     }
     return;

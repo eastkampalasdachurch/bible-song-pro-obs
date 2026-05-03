@@ -1,27 +1,67 @@
-const { app, BrowserWindow, ipcMain, screen, shell, clipboard } = require('electron');
-const path = require('path');
-const os = require('os');
-const fs = require('fs');
-const http = require('http');
-const { WebSocketServer } = require('ws');
+import { app, BrowserWindow, ipcMain, screen, shell, clipboard, IpcMainInvokeEvent } from 'electron';
+import * as path from 'path';
+import * as os from 'os';
+import * as fs from 'fs';
+import * as http from 'http';
+import { WebSocketServer, WebSocket } from 'ws';
 
-let mainWindow = null;
-let outputWindow = null;
-let outputClosedCallbacks = new Set();
-let httpServer = null;
-let relayServer = null;
-const relayClients = new Set();
+interface DisplayInfo {
+  id: number;
+  label: string;
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  isPrimary: boolean;
+  isInternal: boolean;
+}
+
+interface ServerInfo {
+  httpPort: number;
+  relayPort: number;
+  preferredHost: string;
+  availableHosts: string[];
+  displayPath: string;
+  displayUrl: string;
+  relayUrl: string;
+}
+
+interface SystemStats {
+  platform: string;
+  arch: string;
+  electronVersion: string;
+  memory: {
+    total: number;
+    free: number;
+    percent: number;
+  };
+  cpu: {
+    percent: number;
+  };
+  gpu: {
+    renderer: string;
+    vram: string;
+  };
+}
+
+let mainWindow: BrowserWindow | null = null;
+let outputWindow: BrowserWindow | null = null;
+const outputClosedCallbacks = new Set<number>();
+let httpServer: http.Server | null = null;
+let relayServer: WebSocketServer | null = null;
+const relayClients = new Set<WebSocket>();
 const LOCAL_HTTP_PORT = 5510;
 const LOCAL_RELAY_PORT = 5511;
 
-function resolveAppFile(name) {
+function resolveAppFile(name: string): string {
   return path.join(__dirname, '..', name);
 }
 
-function getContentType(filePath) {
+function getContentType(filePath: string): string {
   const ext = path.extname(filePath).toLowerCase();
   if (ext === '.html') return 'text/html; charset=utf-8';
   if (ext === '.js') return 'application/javascript; charset=utf-8';
+  if (ext === '.ts') return 'application/javascript; charset=utf-8';
   if (ext === '.css') return 'text/css; charset=utf-8';
   if (ext === '.svg') return 'image/svg+xml';
   if (ext === '.png') return 'image/png';
@@ -30,9 +70,9 @@ function getContentType(filePath) {
   return 'application/octet-stream';
 }
 
-function getLanAddresses() {
+function getLanAddresses(): string[] {
   const interfaces = os.networkInterfaces();
-  const out = [];
+  const out: string[] = [];
   Object.values(interfaces).forEach((entries) => {
     (entries || []).forEach((entry) => {
       if (!entry || entry.internal) return;
@@ -43,7 +83,7 @@ function getLanAddresses() {
   return [...new Set(out)];
 }
 
-function getLocalServerInfo() {
+function getLocalServerInfo(): ServerInfo {
   const addresses = getLanAddresses();
   const preferredHost = addresses[0] || '127.0.0.1';
   return {
@@ -57,7 +97,7 @@ function getLocalServerInfo() {
   };
 }
 
-function startHttpServer() {
+function startHttpServer(): void {
   if (httpServer) return;
   httpServer = http.createServer((req, res) => {
     const url = new URL(req.url || '/', `http://${req.headers.host || '127.0.0.1'}`);
@@ -81,7 +121,7 @@ function startHttpServer() {
   httpServer.listen(LOCAL_HTTP_PORT, '0.0.0.0');
 }
 
-function startRelayServer() {
+function startRelayServer(): void {
   if (relayServer) return;
   relayServer = new WebSocketServer({ host: '0.0.0.0', port: LOCAL_RELAY_PORT });
   relayServer.on('connection', (socket) => {
@@ -96,7 +136,7 @@ function startRelayServer() {
   });
 }
 
-function broadcastRelayMessage(message) {
+function broadcastRelayMessage(message: unknown): void {
   const data = typeof message === 'string' ? message : JSON.stringify(message);
   relayClients.forEach((client) => {
     if (client.readyState === 1) {
@@ -105,7 +145,7 @@ function broadcastRelayMessage(message) {
   });
 }
 
-function createMainWindow() {
+function createMainWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1600,
     height: 980,
@@ -130,7 +170,7 @@ function createMainWindow() {
   });
 }
 
-function getDisplayBounds(displayId) {
+function getDisplayBounds(displayId?: number): Electron.Rectangle {
   const displays = screen.getAllDisplays();
   if (displayId) {
     const match = displays.find((entry) => entry.id === displayId);
@@ -140,7 +180,12 @@ function getDisplayBounds(displayId) {
   return external.bounds;
 }
 
-function createOutputWindow(options = {}) {
+interface OutputOptions {
+  displayId?: number;
+  fullscreen?: boolean;
+}
+
+function createOutputWindow(options: OutputOptions = {}): BrowserWindow {
   const bounds = getDisplayBounds(options.displayId);
   if (outputWindow && !outputWindow.isDestroyed()) {
     outputWindow.setBounds(bounds);
@@ -176,13 +221,10 @@ function createOutputWindow(options = {}) {
   outputWindow.on('closed', () => {
     outputWindow = null;
     outputClosedCallbacks.forEach((webContentsId) => {
-      const sender = BrowserWindow.fromWebContents(
-        [...BrowserWindow.getAllWindows()]
-          .map((win) => win.webContents)
-          .find((contents) => contents.id === webContentsId)
-      );
-      if (sender && sender.webContents) {
-        sender.webContents.send('bsp:output-closed');
+      const windows = BrowserWindow.getAllWindows();
+      const matchingWindow = windows.find((win) => win.webContents && win.webContents.id === webContentsId);
+      if (matchingWindow && matchingWindow.webContents) {
+        matchingWindow.webContents.send('bsp:output-closed');
       }
     });
   });
@@ -190,7 +232,7 @@ function createOutputWindow(options = {}) {
   return outputWindow;
 }
 
-function getSystemStats() {
+function getSystemStats(): SystemStats {
   return {
     platform: process.platform,
     arch: process.arch,
@@ -211,7 +253,7 @@ function getSystemStats() {
 }
 
 app.whenReady().then(() => {
-  ipcMain.handle('bsp:get-displays', () => {
+  ipcMain.handle('bsp:get-displays', (): DisplayInfo[] => {
     return screen.getAllDisplays().map((display) => ({
       id: display.id,
       label: display.label || `Display ${display.id}`,
@@ -224,52 +266,63 @@ app.whenReady().then(() => {
     }));
   });
 
-  ipcMain.handle('bsp:open-output', (event, options = {}) => {
+  ipcMain.handle('bsp:open-output', (_event: IpcMainInvokeEvent, options: OutputOptions = {}): { ok: boolean } => {
     createOutputWindow(options);
     return { ok: true };
   });
 
-  ipcMain.handle('bsp:close-output', () => {
+  ipcMain.handle('bsp:close-output', (): { ok: boolean } => {
     if (outputWindow && !outputWindow.isDestroyed()) {
       outputWindow.close();
     }
     return { ok: true };
   });
 
-  ipcMain.handle('bsp:is-output-open', () => {
+  ipcMain.handle('bsp:is-output-open', (): boolean => {
     return !!(outputWindow && !outputWindow.isDestroyed());
   });
 
-  ipcMain.handle('bsp:send-output-message', (_event, message) => {
+  ipcMain.handle('bsp:send-output-message', (_event: IpcMainInvokeEvent, message: unknown): { ok: boolean } => {
     if (!outputWindow || outputWindow.isDestroyed()) return { ok: false };
     outputWindow.webContents.send('bsp:output-message', message);
     return { ok: true };
   });
-  ipcMain.handle('bsp:send-vmix-output-message', (_event, message) => {
+
+  ipcMain.handle('bsp:send-vmix-output-message', (_event: IpcMainInvokeEvent, message: unknown): { ok: boolean } => {
     broadcastRelayMessage(message);
     return { ok: true };
   });
-  ipcMain.handle('bsp:get-local-server-info', () => getLocalServerInfo());
-  ipcMain.handle('bsp:copy-text', (_event, text) => {
+
+  ipcMain.handle('bsp:get-local-server-info', (): ServerInfo => {
+    return getLocalServerInfo();
+  });
+
+  ipcMain.handle('bsp:copy-text', (_event: IpcMainInvokeEvent, text: string): { ok: boolean } => {
     clipboard.writeText(String(text || ''));
     return { ok: true };
   });
 
-  ipcMain.handle('bsp:request-output-fullscreen', () => {
+  ipcMain.handle('bsp:request-output-fullscreen', (): { ok: boolean } => {
     if (outputWindow && !outputWindow.isDestroyed()) {
       outputWindow.setFullScreen(true);
     }
     return { ok: true };
   });
 
-  ipcMain.handle('bsp:get-system-stats', () => getSystemStats());
-  ipcMain.handle('bsp:save-theme', () => ({ ok: true }));
-  ipcMain.handle('bsp:open-in-location', async (_event, targetPath) => {
+  ipcMain.handle('bsp:get-system-stats', (): SystemStats => {
+    return getSystemStats();
+  });
+
+  ipcMain.handle('bsp:save-theme', (): { ok: boolean } => {
+    return { ok: true };
+  });
+
+  ipcMain.handle('bsp:open-in-location', async (_event: IpcMainInvokeEvent, targetPath?: string): Promise<{ ok: boolean }> => {
     if (targetPath) await shell.showItemInFolder(targetPath);
     return { ok: true };
   });
 
-  ipcMain.on('bsp:register-output-closed-listener', (event) => {
+  ipcMain.on('bsp:register-output-closed-listener', (event: Electron.IpcMainEvent) => {
     outputClosedCallbacks.add(event.sender.id);
   });
 
@@ -284,10 +337,10 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (httpServer) {
-    try { httpServer.close(); } catch (e) {}
+    try { httpServer.close(); } catch (e) { /* empty */ }
   }
   if (relayServer) {
-    try { relayServer.close(); } catch (e) {}
+    try { relayServer.close(); } catch (e) { /* empty */ }
   }
   if (process.platform !== 'darwin') {
     app.quit();

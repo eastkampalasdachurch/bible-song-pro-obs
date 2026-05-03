@@ -1,3 +1,4 @@
+// @ts-nocheck
     function _re(iid, baseId) { return document.getElementById(baseId + '-' + iid); }
     function _ri(iid) { return _recInstances.get(iid); }
     function _recLinkKey(srcIid, dstIid) {

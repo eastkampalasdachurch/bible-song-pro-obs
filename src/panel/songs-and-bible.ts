@@ -1,3 +1,4 @@
+// @ts-nocheck
     function parseSongVerseHeader(line, allowLoose = false) {
       const raw = String(line || '').trim();
       if (!raw) return null;

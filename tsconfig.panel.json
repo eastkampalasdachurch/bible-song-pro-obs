@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "None",
+    "lib": ["ES2022", "DOM"],
+    "strict": false,
+    "noImplicitAny": false,
+    "noImplicitThis": false,
+    "strictNullChecks": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": false,
+    "ignoreDeprecations": "6.0",
+    "outDir": "./ts-dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/panel/**/*.ts"],
+  "exclude": ["node_modules"]
+}

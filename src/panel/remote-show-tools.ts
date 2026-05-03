@@ -1,3 +1,4 @@
+// @ts-nocheck
     function remoteShowLog(event, details) {
       const ts = new Date().toISOString();
       const line = `[${ts}] ${event}${details ? ` | ${details}` : ''}`;

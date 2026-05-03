@@ -1,3 +1,4 @@
+// @ts-nocheck
     function getActiveBgOpacityValue() {
       return (activeRatio === 'full') ? bgOpacityFull : bgOpacityLT;
     }

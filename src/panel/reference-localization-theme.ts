@@ -1,3 +1,4 @@
+// @ts-nocheck
     function getSearchTabKey(rawTab) {
       const tab = String(rawTab || '').toLowerCase();
       return SEARCH_TABS.includes(tab) ? tab : 'songs';

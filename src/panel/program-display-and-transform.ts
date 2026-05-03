@@ -1,3 +1,4 @@
+// @ts-nocheck
     function renderProgramDisplay() {
       const comp = document.getElementById('source-compositor');
       if (!comp) return;

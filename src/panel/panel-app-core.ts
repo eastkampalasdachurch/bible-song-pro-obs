@@ -1,3 +1,4 @@
+// @ts-nocheck
     // ===== CONSTANTS / GLOBALS =====
     const CHANNEL_NAME = 'bible_song_pro_v1';
     const HOST_MODE_OBS = 'obs';

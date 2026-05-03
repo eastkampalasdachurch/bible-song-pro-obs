@@ -1,3 +1,4 @@
+// @ts-nocheck
         // Annotate tool + highlight tags
         const ANNOTATE_TAG_RE = /\[hl=#[0-9a-fA-F]{6}\]|\[\/hl\]/g;
         let annotateMode = false;

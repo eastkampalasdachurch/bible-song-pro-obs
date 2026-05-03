@@ -1,3 +1,4 @@
+// @ts-nocheck
     function getHostMode() {
       return [HOST_MODE_OBS, HOST_MODE_VMIX, HOST_MODE_STANDALONE].includes(hostMode) ? hostMode : HOST_MODE_OBS;
     }

@@ -1,3 +1,4 @@
+// @ts-nocheck
     function setProgramDisplayAspect(aspect) {
       const shell = document.getElementById('program-display-shell');
       if (!shell) return;

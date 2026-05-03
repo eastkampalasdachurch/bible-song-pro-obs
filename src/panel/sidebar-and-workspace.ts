@@ -1,3 +1,4 @@
+// @ts-nocheck
     function switchAppPage(page) {
       const allowedPages = new Set(['projection']);
       if (!allowedPages.has(page)) page = 'projection';

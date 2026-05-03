@@ -1,3 +1,4 @@
+// @ts-nocheck
     function clearOutput(opts = {}) {
       isLive = false;
       liveKind = null;

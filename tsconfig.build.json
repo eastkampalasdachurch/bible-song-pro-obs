@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "None",
+    "lib": ["ES2022", "DOM"],
+    "strict": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": true,
+    "outDir": "./ts-dist/panel",
+    "rootDir": "js"
+  },
+  "include": ["js/panel/**/*", "js/types/**/*"],
+  "exclude": ["node_modules"]
+}

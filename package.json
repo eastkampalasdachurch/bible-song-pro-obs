@@ -2,17 +2,24 @@
   "name": "sda-bible-song-pro",
   "version": "1.0.0",
   "description": "Bible Song for SDA Hymns and Bible",
-  "main": "electron/main.js",
+  "main": "dist/electron/main.js",
   "author": "East Kampala SDA Church",
   "private": true,
   "scripts": {
-    "start": "electron .",
-    "feedback:server": "node server/feedback-backend.js",
-    "pack:mac": "electron-builder --mac dir",
-    "dist:mac": "electron-builder --mac",
-    "pack:win": "electron-builder --win nsis portable",
-    "dist:win": "electron-builder --win",
-    "dist:linux": "electron-builder --linux"
+    "clean": "rm -rf dist ts-dist",
+    "build": "bun run build:node && bun run build:panel",
+    "build:node": "tsc -p tsconfig.json",
+    "build:panel": "tsc -p tsconfig.panel.json",
+    "build:all": "bun run clean && bun run build",
+    "start": "bun run build && electron .",
+    "feedback:server": "node dist/server/feedback-backend.js",
+    "feedback:dev": "bun run --bun server/feedback-backend.ts",
+    "pack:mac": "bun run build && electron-builder --mac dir",
+    "dist:mac": "bun run build && electron-builder --mac",
+    "pack:win": "bun run build && electron-builder --win nsis portable",
+    "dist:win": "bun run build && electron-builder --win",
+    "dist:linux": "bun run build && electron-builder --linux",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.panel.json"
   },
   "build": {
     "appId": "com.sdabiblesongpro.desktop",
@@ -22,8 +29,9 @@
       "BSP_display.html",
       "index.html",
       "assets/**/*",
-      "js/**/*",
-      "electron/**/*",
+      "ts-dist/**/*",
+      "dist/**/*",
+      "src/**/*",
       "package.json",
       "README.md",
       "LICENSE"
@@ -72,7 +80,10 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/ws": "^8.18.1",
     "electron": "^31.7.7",
-    "electron-builder": "^24.13.3"
+    "electron-builder": "^24.13.3",
+    "typescript": "^6.0.3"
   }
 }

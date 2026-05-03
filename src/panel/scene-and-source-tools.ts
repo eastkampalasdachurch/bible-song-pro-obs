@@ -1,3 +1,4 @@
+// @ts-nocheck
     function updateDockSceneTabUi(tabId) {
       document.querySelectorAll('.dock-scene-tab').forEach((btn) => {
         btn.classList.toggle('active', btn.id === 'dock-scene-' + tabId);

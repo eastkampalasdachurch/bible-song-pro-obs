@@ -1,3 +1,4 @@
+// @ts-nocheck
     function updateSearchPlaceholder() {
       const inp = document.getElementById('song-search');
       const mirror = document.getElementById('nav-mirror-search');

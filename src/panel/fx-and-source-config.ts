@@ -1,3 +1,4 @@
+// @ts-nocheck
     function _fxLabel(type) {
       const found = SOURCE_AUDIO_FX_LIBRARY.find((x) => x.type === type) || SOURCE_VIDEO_FX_LIBRARY.find((x) => x.type === type);
       return found ? found.label : type;

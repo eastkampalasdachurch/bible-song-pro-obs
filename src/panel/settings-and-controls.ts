@@ -1,3 +1,4 @@
+// @ts-nocheck
     function getSliderConfigs() {
       return [
         { id: 'line-height-full', suffix: '' },

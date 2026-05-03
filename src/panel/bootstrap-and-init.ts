@@ -1,3 +1,4 @@
+// @ts-nocheck
     function buildDefaultAppState() {
       return {
         version: 1,

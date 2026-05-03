@@ -1,3 +1,4 @@
+// @ts-nocheck
     function selectAbTheme(value) {
       const normalizedTheme = normalizeThemeId(value);
       closeAbSettingsPopup();

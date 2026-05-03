@@ -1,3 +1,4 @@
+// @ts-nocheck
     (function enableObsIsolatedControlPanel() {
       const OBS_ISOLATED_MODE = (typeof isObsMode === 'function') ? isObsMode() : true;
       if (!OBS_ISOLATED_MODE) return;

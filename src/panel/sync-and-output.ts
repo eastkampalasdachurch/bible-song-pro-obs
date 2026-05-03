@@ -1,3 +1,4 @@
+// @ts-nocheck
     // ===== SYNC (BroadcastChannel) =====
     let connectionTimer = null;
     let syncMirrorDbPromise = null;

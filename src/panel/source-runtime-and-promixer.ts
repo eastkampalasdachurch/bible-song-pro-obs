@@ -1,3 +1,4 @@
+// @ts-nocheck
     function buildSourceConfigFields(type) {
       const _g = (label, id, inner, hint) =>
         `<div class="src-cfg-group">`
