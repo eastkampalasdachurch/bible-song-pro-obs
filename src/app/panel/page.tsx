@@ -199,6 +199,7 @@ const ANNOTATION_TOOLS: AnnotationTool[] = [
 const BIBLE_VERSIONS = [
   { id: "KJV", name: "King James Version (KJV)" },
   { id: "BSB", name: "Berean Standard Bible (BSB)" },
+  { id: "web", name: "World English Bible (WEB)" },
 ];
 
 type ToolbarTab = "bible" | "songs" | "scenes" | "media" | "audio" | "schedule" | "host" | "annotate";
@@ -371,11 +372,10 @@ export default function PanelPage() {
   const [translationContent, setTranslationContent] = useState("");
   const [bilingualEnabled, setBilingualEnabled] = useState(false);
 
-  // Bible API functions (using bible.helloao.org as requested)
+  // Bible API functions with fallback system
   const fetchChapter = async (book: string, chapter: number, translation: string = "KJV") => {
+    // Try bible.helloao.org first (as requested by user)
     try {
-      // bible.helloao.org uses format like "/api/KJV/GEN/1.json"
-      // Convert book names to standard 3-letter codes
       const bookMapping: { [key: string]: string } = {
         'Genesis': 'GEN', 'Exodus': 'EXO', 'Leviticus': 'LEV', 'Numbers': 'NUM', 'Deuteronomy': 'DEU',
         'Joshua': 'JOS', 'Judges': 'JDG', 'Ruth': 'RUT', '1 Samuel': '1SA', '2 Samuel': '2SA',
@@ -398,21 +398,69 @@ export default function PanelPage() {
       const response = await fetch(`https://bible.helloao.org/api/${translation}/${bookId}/${chapter}.json`);
 
       if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
+        throw new Error(`Primary API request failed: ${response.status}`);
       }
 
-      const chapterData = await response.json();
+      const text = await response.text();
+      if (text.includes('<!doctype') || text.includes('<html')) {
+        throw new Error('Primary API returned HTML instead of JSON');
+      }
+
+      const chapterData = JSON.parse(text);
       return chapterData;
+
     } catch (error) {
-      console.error('Failed to fetch chapter from bible.helloao.org:', error);
-      // Fallback to a simple error message
-      return { error: 'Failed to load Bible chapter', fallback: true };
+      console.warn('bible.helloao.org failed, trying fallback API:', error);
+
+      // Fallback to bible-api.com
+      try {
+        const bookName = book.toLowerCase();
+        let translationParam = '';
+
+        // Map translation IDs for fallback API
+        if (translation === 'KJV') {
+          translationParam = '?translation=kjv';
+        } else if (translation === 'BSB') {
+          // BSB not available in fallback, use WEB
+          translationParam = '';
+        } else if (translation === 'web') {
+          // WEB is the default for bible-api.com
+          translationParam = '';
+        }
+
+        const response = await fetch(`https://bible-api.com/${bookName}+${chapter}${translationParam}`);
+
+        if (!response.ok) {
+          throw new Error(`Fallback API request failed: ${response.status}`);
+        }
+
+        const chapterData = await response.json();
+
+        // Transform bible-api.com response to match our expected format
+        if (chapterData.verses && Array.isArray(chapterData.verses)) {
+          return {
+            chapter: {
+              content: chapterData.verses.map((verse: any) => ({
+                type: 'verse',
+                number: verse.verse,
+                content: [verse.text.replace(/\n/g, ' ').trim()]
+              }))
+            }
+          };
+        }
+
+        throw new Error('Fallback API returned unexpected format');
+
+      } catch (fallbackError) {
+        console.error('Both APIs failed:', fallbackError);
+        return { error: 'Failed to load Bible chapter from any API', fallback: true };
+      }
     }
   };
 
-  // Bible API integration with bible.helloao.org
-  // Currently supports KJV and BSB - the API may have additional translations
-  // that can be added as they become available or as the API improves
+  // Bible API integration with fallback system
+  // Primary: bible.helloao.org (KJV, BSB) - Fallback: bible-api.com (KJV, WEB)
+  // Provides reliable Bible content with automatic failover
 
   // localStorage persistence
   useEffect(() => {
@@ -565,6 +613,7 @@ export default function PanelPage() {
       }
 
       if (chapterData && chapterData.chapter && chapterData.chapter.content) {
+        // bible.helloao.org format
         let content = '';
         const startVerse = verses?.start || 1;
         const endVerse = verses?.end || 999; // High number to include all verses
@@ -589,6 +638,21 @@ export default function PanelPage() {
             }
 
             content += verseText.replace(/\n/g, ' ').trim() + ' ';
+          }
+        }
+
+        setFetchedLyrics([content.trim()]);
+        setLineCursor(0);
+      } else if (chapterData && chapterData.verses && Array.isArray(chapterData.verses)) {
+        // bible-api.com fallback format
+        let content = '';
+        const startVerse = verses?.start || 1;
+        const endVerse = verses?.end || chapterData.verses.length;
+
+        for (let i = startVerse - 1; i < Math.min(endVerse, chapterData.verses.length); i++) {
+          const verse = chapterData.verses[i];
+          if (verse && verse.text) {
+            content += verse.text.replace(/\n/g, ' ').trim() + ' ';
           }
         }
 
