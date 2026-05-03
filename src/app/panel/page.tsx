@@ -198,6 +198,7 @@ const ANNOTATION_TOOLS: AnnotationTool[] = [
 
 const BIBLE_VERSIONS = [
   { id: "KJV", name: "King James Version (KJV)" },
+  { id: "BSB", name: "Berean Standard Bible (BSB)" },
 ];
 
 type ToolbarTab = "bible" | "songs" | "scenes" | "media" | "audio" | "schedule" | "host" | "annotate";
@@ -409,8 +410,8 @@ export default function PanelPage() {
     }
   };
 
-  // Note: Current Bible API (bible.helloao.org) supports King James Version (KJV)
-  // Additional translations can be added as they become available
+  // Note: Current Bible API (bible.helloao.org) supports KJV and BSB translations
+  // The API is open source and may have additional translations available
 
   // localStorage persistence
   useEffect(() => {
