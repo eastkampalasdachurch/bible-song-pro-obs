@@ -622,8 +622,10 @@ export default function PanelPage() {
         // Parse the complex content structure from bible.helloao.org
         const chapterVerses = chapterData.chapter.content.filter((item: any) => item.type === 'verse');
 
-        for (let i = startVerse - 1; i < Math.min(endVerse, chapterVerses.length); i++) {
-          const verse = chapterVerses[i];
+        // Filter verses by verse number instead of array index
+        const selectedVerses = chapterVerses.filter((verse: any) => verse.number >= startVerse && verse.number <= endVerse);
+
+        for (const verse of selectedVerses) {
           if (verse && verse.content) {
             // Extract text from verse content array
             let verseText = '';
@@ -644,14 +646,16 @@ export default function PanelPage() {
 
         setFetchedLyrics([content.trim()]);
         setLineCursor(0);
-      } else       if (chapterData && chapterData.verses && Array.isArray(chapterData.verses)) {
+      } else if (chapterData && chapterData.verses && Array.isArray(chapterData.verses)) {
         // bible-api.com fallback format
         let content = '';
         const startVerse = verses?.start || 1;
-        const endVerse = verses?.end || (verses?.start ? verses.start : chapterData.verses.length);
+        const endVerse = verses?.end || (verses?.start ? verses.start : 999); // Use high number if no end specified
 
-        for (let i = startVerse - 1; i < Math.min(endVerse, chapterData.verses.length); i++) {
-          const verse = chapterData.verses[i];
+        // Filter verses by verse number instead of array index
+        const selectedVerses = chapterData.verses.filter((verse: any) => verse.verse >= startVerse && verse.verse <= endVerse);
+
+        for (const verse of selectedVerses) {
           if (verse && verse.text) {
             content += verse.text.replace(/\n/g, ' ').trim() + ' ';
           }
