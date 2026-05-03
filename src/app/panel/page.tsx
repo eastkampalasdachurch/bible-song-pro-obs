@@ -147,6 +147,8 @@ const BIBLE_BOOKS: BibleBook[] = [
   { id: "revelation", name: "Revelation", chapters: 22 },
 ];
 
+// Sample songs - users can add/edit/delete their own songs
+// Bible content is now fetched from live API (bible-api.com)
 const DEFAULT_SONGS: Song[] = [
   { id: "1", title: "Joyful, Joyful", number: 1, verses: 2, lyrics: ["Joyful, joyful, we adore Thee", "God of glory, Lord of love"] },
   { id: "2", title: "Amazing Grace", number: 2, verses: 4, lyrics: ["Amazing grace, how sweet the sound", "That saved a wretch like me"] },
