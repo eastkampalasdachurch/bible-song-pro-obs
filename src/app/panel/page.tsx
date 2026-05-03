@@ -469,16 +469,14 @@ export default function PanelPage() {
     }
   };
 
-  const handleImportSongs = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".txt,.song";
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
+  const handleImportSongs = async () => {
+    const input = document.getElementById('import-file') as HTMLInputElement;
+    if (!input || !input.files) return;
+
+    const newSongs: Song[] = [];
+    for (const file of Array.from(input.files)) {
       const text = await file.text();
       const lines = text.split("\n").filter(Boolean);
-      const newSongs: Song[] = [];
       let currentSongId = "";
       let currentSongNum = 0;
       let currentSongTitle = "";
@@ -492,7 +490,7 @@ export default function PanelPage() {
           if (currentSongId && currentLyrics.length > 0) {
             newSongs.push({ id: currentSongId, number: currentSongNum, title: currentSongTitle, lyrics: currentLyrics });
           }
-          currentSongId = `import-${numMatch[1]}`;
+          currentSongId = `import-${Date.now()}-${numMatch[1]}`;
           currentSongNum = parseInt(numMatch[1]);
           currentSongTitle = numMatch[2] || `Song ${numMatch[1]}`;
           currentLyrics = [];
@@ -504,9 +502,12 @@ export default function PanelPage() {
       if (currentSongId && currentLyrics.length > 0) {
         newSongs.push({ id: currentSongId, number: currentSongNum, title: currentSongTitle, lyrics: currentLyrics });
       }
+    }
+
+    if (newSongs.length > 0) {
       setSongs([...songs, ...newSongs]);
-    };
-    input.click();
+    }
+    input.value = ''; // Reset input
   };
 
   const [bibleQuickSearch, setBibleQuickSearch] = useState("");
@@ -872,7 +873,7 @@ export default function PanelPage() {
               <Button variant={editorMode === "text" ? "secondary" : "ghost"} size="sm" className="h-7 px-2 text-xs" onClick={() => setEditorMode("text")}>Text</Button>
               <Button variant={editorMode === "buttons" ? "secondary" : "ghost"} size="sm" className="h-7 px-2 text-xs" onClick={() => setEditorMode("buttons")}>Buttons</Button>
             </div>
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleImportSongs} title="Import songs"><Upload className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => document.getElementById('import-file')?.click()} title="Import songs"><Upload className="h-4 w-4" /></Button>
             <Button variant="outline" size="sm" className="h-8 text-xs font-serif italic" title="Animation presets" onClick={() => setShowPresetPopover(!showPresetPopover)}>fx</Button>
             <Button variant="outline" size="icon" className="h-8 w-8" title="Annotate" onClick={() => setActiveTab("annotate")}><Pen className="h-4 w-4" /></Button>
             <Button variant="outline" size="icon" className="h-8 w-8" title="Dual Bible" onClick={() => setDualBibleEnabled(!dualBibleEnabled)}><Book className="h-4 w-4" /></Button>
@@ -1012,217 +1013,11 @@ export default function PanelPage() {
                         <div className="text-xs text-muted-foreground">{item.type}</div>
                       </div>
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setScheduleItems(scheduleItems.filter(s => s.id !== item.id))}><X className="h-3 w-3" /></Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </aside>
-        )}
+        </div>
+      )}
 
-        {activeTab === "host" && (
-          <aside className="w-80 border-r border-border bg-card flex flex-col">
-            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Host / vMix</span><Button variant="outline" size="sm" title="Connect" onClick={() => { if (hostConnection === "disconnected") setHostConnection("connecting"); else setHostConnection("disconnected"); }}><RefreshCw className={`h-3 w-3 ${hostConnection === "connecting" ? "animate-spin" : ""}`} /></Button></div>
-            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><VideoIcon className="h-3 w-3" /> Host Mode
-              <Badge variant={hostConnection === "connected" ? "default" : "secondary"} className="ml-auto text-xs">{hostConnection}</Badge>
-            </CardTitle></CardHeader><CardContent className="space-y-3"><Select defaultValue="obs"><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="obs">OBS Studio</SelectItem><SelectItem value="vmix">vMix</SelectItem><SelectItem value="standalone">Standalone</SelectItem></SelectContent></Select><div className="space-y-2"><Label>URL</Label><Input placeholder="http://localhost:8088" value={hostUrl} onChange={(e) => setHostUrl(e.target.value)} /></div><div className="space-y-2"><Label>API Key</Label><Input placeholder="Enter API key" type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} /></div><Button className="w-full" onClick={() => { setHostConnection("connecting"); setTimeout(() => setHostConnection("connected"), 1500); }} disabled={hostConnection === "connected"}><Wifi className="h-3 w-3 mr-1" /> {hostConnection === "connected" ? "Connected" : "Connect"}</Button></CardContent></Card>
-            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Monitor className="h-3 w-3" /> Program Output</CardTitle></CardHeader><CardContent className="space-y-3">
-              <div className="flex items-center justify-between"><Label>Studio Mode</Label><Switch /></div>
-              <div className="flex items-center justify-between"><Label>Auto Reconnect</Label><Switch defaultChecked /></div>
-              <div className="text-xs text-muted-foreground">Status: {hostConnection === "connected" ? "Ready to receive API calls" : "Not connected"}</div>
-            </CardContent></Card>
-            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><LayersIcon className="h-3 w-3" /> Sources</CardTitle></CardHeader><CardContent>
-              {hostConnection !== "connected" ? <div className="text-center text-muted-foreground text-sm py-4"><p>Not connected</p><p className="text-xs">Connect to see sources</p></div> : <div className="space-y-2">
-                <div className="flex items-center gap-2 p-2 rounded border"><Checkbox defaultChecked /> <span className="flex-1 text-sm">Bible Song Pro</span><Eye className="h-3 w-3" /></div>
-                <div className="flex items-center gap-2 p-2 rounded border"><Checkbox /> <span className="flex-1 text-sm">Main Display</span></div>
-              </div>}
-            </CardContent></Card>
-          </aside>
-        )}
-
-        {activeTab === "annotate" && (
-          <aside className="w-80 border-r border-border bg-card flex flex-col">
-            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Annotation Tools</span><Button variant="outline" size="sm" title="Clear all" onClick={() => setAnnotations([])}><Eraser className="h-3 w-3" /></Button></div>
-            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Tools</CardTitle></CardHeader><CardContent><div className="grid grid-cols-4 gap-2">
-              <Button variant={selectedAnnotationTool === "pen" ? "secondary" : "outline"} size="icon" title="Pen" onClick={() => setSelectedAnnotationTool("pen")}><Pen className="h-4 w-4" /></Button>
-              <Button variant={selectedAnnotationTool === "highlighter" ? "secondary" : "outline"} size="icon" title="Highlighter" onClick={() => setSelectedAnnotationTool("highlighter")}><Highlighter className="h-4 w-4" /></Button>
-              <Button variant={selectedAnnotationTool === "eraser" ? "secondary" : "outline"} size="icon" title="Eraser" onClick={() => setSelectedAnnotationTool("eraser")}><Eraser className="h-4 w-4" /></Button>
-              <Button variant={selectedAnnotationTool === "text" ? "secondary" : "outline"} size="icon" title="Text" onClick={() => setSelectedAnnotationTool("text")}><TypeIcon className="h-4 w-4" /></Button>
-            </div></CardContent></Card>
-            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Color</CardTitle></CardHeader><CardContent><div className="flex gap-1 flex-wrap">{quickColors.map(c => <Button key={c} variant={annotationColor === c ? "secondary" : "outline"} size="icon" className="w-6 h-6" style={{backgroundColor: c}} onClick={() => setAnnotationColor(c)} />)}</div></CardContent></Card>
-            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Stroke: {annotationStroke}px</CardTitle></CardHeader><CardContent><Slider value={[annotationStroke]} onValueChange={(v) => setAnnotationStroke(Array.isArray(v) ? v[0] : v)} min={1} max={20} step={1} /></CardContent></Card>
-          </aside>
-        )}
-
-        <main className="flex-1 overflow-auto">
-
-            <div className="p-4 space-y-4">
-              {activeTab === "songs" && selectedSong && (
-                <>
-                  {editorMode === "text" && (
-                    <Card>
-                      <CardHeader className="pb-2"><CardTitle className="text-sm">Lyrics Editor</CardTitle></CardHeader>
-                      <CardContent className="space-y-4">
-                        <textarea
-                          className="w-full h-48 p-3 rounded-md border border-input bg-background font-mono text-sm resize-none"
-                          placeholder="Type or paste lyrics here..."
-                          value={lyricsEditorContent}
-                          onChange={(e) => setLyricsEditorContent(e.target.value)}
-                        />
-                        <div className="flex items-center justify-between">
-                          <Button variant="outline" size="sm" onClick={() => setShowTranslationPanel(!showTranslationPanel)}><TypeIcon className="h-3 w-3 mr-1" /> Translation</Button>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">Word count: {lyricsEditorContent.split(/\s+/).filter(Boolean).length}</span>
-                          </div>
-                        </div>
-                        {showTranslationPanel && (
-                          <Card className="bg-muted/50">
-                            <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><TypeIcon className="h-3 w-3" /> Translation</CardTitle></CardHeader>
-                            <CardContent className="space-y-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <Checkbox id="bilingual" checked={bilingualEnabled} onCheckedChange={(c) => setBilingualEnabled(!!c)} />
-                                  <label htmlFor="bilingual" className="text-xs">Show bilingual globally</label>
-                                </div>
-                                <div className="flex gap-1">
-                                  <Button variant="outline" size="sm">Update</Button>
-                                  <Button variant="outline" size="sm">Remove</Button>
-                                </div>
-                              </div>
-                              <textarea
-                                className="w-full h-32 p-3 rounded-md border border-input bg-background font-mono text-sm resize-none"
-                                placeholder="Translated lyrics will appear here..."
-                                value={translationContent}
-                                onChange={(e) => setTranslationContent(e.target.value)}
-                              />
-                            </CardContent>
-                          </Card>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
-                  {editorMode === "buttons" && (
-                    <Card>
-                      <CardHeader className="pb-2"><CardTitle className="text-sm">Lyrics Editor (Buttons)</CardTitle></CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="grid grid-cols-4 gap-2">
-                          {selectedSong?.lyrics?.map((line, index) => (
-                            <Button key={index} variant="outline" size="sm" className="text-left h-auto py-2 px-3">
-                              <span className="text-xs">{line}</span>
-                            </Button>
-                          ))}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">Add Line</Button>
-                          <Button variant="outline" size="sm">Edit</Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </>
-              )}
-              {activeTab === "bible" && selectedBook && (
-                <Card>
-                  <CardHeader><CardTitle className="text-sm">Select Passage</CardTitle></CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label>Book</Label>
-                        <Input value={selectedBook.name} disabled />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Chapter</Label>
-                        <Select value={selectedChapter?.toString() || ""} onValueChange={(v) => setSelectedChapter(v ? parseInt(v) : null)}>
-                          <SelectTrigger><SelectValue placeholder="Select chapter" /></SelectTrigger>
-                          <SelectContent>
-                            {getChapterOptions().map((ch) => <SelectItem key={ch} value={ch.toString()}>{ch}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Verses (optional)</Label>
-                        <div className="flex gap-2">
-                          <Select value={verseStart?.toString() || ""} onValueChange={(v) => setVerseStart(v ? parseInt(v) : null)}>
-                            <SelectTrigger><SelectValue placeholder="From" /></SelectTrigger>
-                            <SelectContent>
-                              {getVerseOptions().map((v) => <SelectItem key={v} value={v.toString()}>{v}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                          <span className="self-center">-</span>
-                          <Select value={verseEnd?.toString() || ""} onValueChange={(v) => setVerseEnd(v ? parseInt(v) : null)}>
-                            <SelectTrigger><SelectValue placeholder="To" /></SelectTrigger>
-                            <SelectContent>
-                              {getVerseOptions().map((v) => <SelectItem key={v} value={v.toString()}>{v}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              <Card>
-                <CardHeader><CardTitle>{getContentTitle() || "Select content"}</CardTitle><CardDescription>{getContentTitle() ? `${selectedItem?.type === 'song' ? 'Song' : 'Bible'} • ${isLive ? 'Live on display' : 'Ready'}` : "Choose content from the sidebar"}</CardDescription></CardHeader>
-                <CardContent>
-                  {getContentTitle() ? (
-                    <div className="space-y-4">
-                      <div className="rounded-lg p-8 text-center min-h-[300px] flex items-center justify-center" style={{ background: bgType === "gradient" ? `linear-gradient(${bgGradientAngle}deg, ${bgGradientStart}, ${bgGradientEnd})` : bgColor, opacity: bgOpacity / 100, width: `${displayWidth}%`, borderRadius: `${displayRadius}px`, margin: '0 auto', transform: `scale(${displayScale / 100})`, transformOrigin: displayAnchor === 'top' ? 'top center' : 'bottom center' }}>
-                        <div className="text-white" style={{ fontSize: `${fontSize}px`, lineHeight: lineSpacing, textTransform: textTransform, textAlign: hAlign }}>{getPreviewContent().split('\n').map((line, i) => <p key={i}>{line}</p>)}</div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="icon" onClick={handlePrevPage}><ChevronLeft className="h-4 w-4" /></Button>
-                          <span className="text-sm text-muted-foreground">{activeTab === "songs" && selectedSong?.lyrics ? `${songLineCursor + 1} / ${Math.ceil((selectedSong.lyrics?.length || 1) / linesPerPage)}` : `Page ${currentPage + 1}`}</span>
-                          <Button variant="outline" size="icon" onClick={handleNextPage}><ChevronRight className="h-4 w-4" /></Button>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button onClick={handleGoLive}><Play className="h-4 w-4 mr-1" /> Go Live</Button>
-                          <Button variant="outline" onClick={handleClear}>Clear</Button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="rounded-lg border border-dashed p-12 text-center text-muted-foreground">
-                      {activeTab === "bible" ? <><Book className="h-12 w-12 mx-auto mb-4 opacity-50" /><p>Select a book and chapter</p></> : activeTab === "songs" ? <><Music className="h-12 w-12 mx-auto mb-4 opacity-50" /><p>Select a song</p></> : <><Monitor className="h-12 w-12 mx-auto mb-4 opacity-50" /><p>Select content</p></>}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2"><Settings className="h-4 w-4" /> Live Controls</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-3 gap-2">
-                    <Label className="col-span-3 text-xs text-muted-foreground">Lines per Page</Label>
-                    <div className="col-span-3 flex gap-1">
-                      {[1,2,3,4,5,6].map(n => <Button key={n} variant={linesPerPage === n ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setLinesPerPage(n)}>{n}</Button>)}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Label className="col-span-3 text-xs text-muted-foreground">Display Mode</Label>
-                    <div className="col-span-3 flex gap-1">
-                      <Button variant={displayMode === "full" ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setDisplayMode("full")}>FS</Button>
-                      <Button variant={displayMode === "lt" ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setDisplayMode("lt")}>LT</Button>
-                      <Button variant={displayMode === "custom" ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setDisplayMode("custom")}>Custom</Button>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    <Label className="col-span-4 text-xs text-muted-foreground">Background</Label>
-                    <div className="col-span-4 flex gap-1">
-                      <Button variant={bgType === "solid" ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setBgType("solid")}>BG</Button>
-                      <Button variant={bgType === "gradient" ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setBgType("gradient")}>GB</Button>
-                      <Button variant="outline" size="sm" className="flex-1">Image</Button>
-                      <Button variant="outline" size="sm" className="flex-1">Video</Button>
-                    </div>
-                  </div>
-                  <div className="space-x-2"><Label>Color:</Label><Input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-8 h-8 p-0.5" /><span className="text-sm text-muted-foreground">{bgColor}</span></div>
-                  <div className="grid grid-cols-2 gap-4"><div className="flex items-center justify-between p-3 rounded-lg bg-muted"><Label className="text-sm">Auto Advance</Label><Switch checked={autoAdvance} onCheckedChange={setAutoAdvance} /></div><div className="flex items-center justify-between p-3 rounded-lg bg-muted"><Label className="text-sm">Auto Go Live</Label><Switch checked={autoGoLive} onCheckedChange={setAutoGoLive} /></div></div>
-                </CardContent>
-              </Card>
-            </div>
-        </main>
-      </div>
+      {/* Hidden file inputs */}
+      <input type="file" id="import-file" hidden multiple onChange={(e) => handleImportSongs()} />
     </div>
   );
 }
