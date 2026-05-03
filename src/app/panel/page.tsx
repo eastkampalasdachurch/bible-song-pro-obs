@@ -178,10 +178,11 @@ const SCENES: Scene[] = [
 ];
 
 const DEFAULT_SOURCES: SceneSource[] = [
-  { id: "source-1", name: "Main Lyrics", type: "text", visible: true },
-  { id: "source-2", name: "Reference", type: "text", visible: true },
-  { id: "source-3", name: "Background", type: "image", visible: true },
-  { id: "source-4", name: "Camera", type: "camera", visible: false },
+  { id: "source-1", name: "Main Lyrics", type: "text", visible: true, locked: false },
+  { id: "source-2", name: "Reference", type: "text", visible: true, locked: false },
+  { id: "source-3", name: "Background", type: "image", visible: true, locked: false },
+  { id: "source-4", name: "Camera", type: "camera", visible: false, locked: false },
+  { id: "source-5", name: "Audio", type: "audio", visible: true, locked: false },
 ];
 
 const ANNOTATION_TOOLS: AnnotationTool[] = [
@@ -292,6 +293,8 @@ export default function PanelPage() {
 
   // Schedule/Setlist
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
+  const [showNewSongModal, setShowNewSongModal] = useState(false);
+  const [newSongTitle, setNewSongTitle] = useState("");
 
   // Editor mode
   const [editorMode, setEditorMode] = useState<"text" | "buttons">("buttons");
@@ -523,8 +526,15 @@ export default function PanelPage() {
             </TabsList>
           </Tabs>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleClear}><X className="h-4 w-4 mr-1" /> Clear</Button>
-            <Button variant={isLive ? "destructive" : "default"} size="sm" onClick={handleGoLive} disabled={!selectedItem && !selectedSong && !selectedBook && !isLive}>
+            <Button variant="outline" size="sm" onClick={() => { const num = songs.length + 1; setSongs([...songs, { id: `new-${num}`, number: num, title: `New Song ${num}` }]); }}><Plus className="h-4 w-4 mr-1" /> Add</Button>
+            <div className="flex items-center rounded-md border border-input bg-background p-0.5">
+              <Button variant={editorMode === "text" ? "secondary" : "ghost"} size="sm" className="h-7 px-2 text-xs" onClick={() => setEditorMode("text")}>Text</Button>
+              <Button variant={editorMode === "buttons" ? "secondary" : "ghost"} size="sm" className="h-7 px-2 text-xs" onClick={() => setEditorMode("buttons")}>Buttons</Button>
+            </div>
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleImportSongs} title="Import songs"><Upload className="h-4 w-4" /></Button>
+            <Button variant="outline" size="sm" className="h-8 text-xs font-serif italic" title="Animation presets">fx</Button>
+            <Button variant="outline" size="sm" onClick={handleClear}><X className="h-4 w-4 mr-1" /></Button>
+            <Button variant={isLive ? "destructive" : "default"} size="sm" onClick={handleGoLive}>
               {isLive ? <SquareIcon className="h-4 w-4 mr-1" /> : <Play className="h-4 w-4 mr-1" />}
               {isLive ? "Live" : "Go Live"}
             </Button>
@@ -595,15 +605,41 @@ export default function PanelPage() {
 
         {activeTab === "scenes" && (
           <aside className="w-80 border-r border-border bg-card flex flex-col">
-            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Scenes</span><Button variant="outline" size="sm"><Plus className="h-3 w-3" /></Button></div>
-            <ScrollArea className="flex-1"><div className="p-2 space-y-1">{SCENES.map((scene) => (<Button key={scene.id} variant={selectedScene?.id === scene.id ? "secondary" : "ghost"} className="w-full justify-start text-left" onClick={() => setSelectedScene(scene)}><LayersIcon className="h-4 w-4 mr-2" />{scene.name}</Button>))}</div></ScrollArea>
+            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Scenes</span><Button variant="outline" size="sm" onClick={() => { const num = scenes.length + 1; setScenes([...scenes, { id: `scene-${num}`, name: `Scene ${num}`, type: "blank" as const }]); }}><Plus className="h-3 w-3" /></Button></div>
+            <ScrollArea className="flex-1">
+              <div className="p-2 space-y-1">
+                {scenes.map((scene) => (
+                  <div key={scene.id} className={`flex items-center gap-2 p-2 rounded cursor-pointer ${activeSceneId === scene.id ? "bg-secondary" : "hover:bg-accent/10"}`} onClick={() => setActiveSceneId(scene.id)}>
+                    <LayersIcon className="h-4 w-4" />
+                    <span className="flex-1 text-sm">{scene.name}</span>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); setScenes(scenes.filter(s => s.id !== scene.id)); }}><Trash2 className="h-3 w-3" /></Button>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
           </aside>
         )}
 
         {activeTab === "media" && (
           <aside className="w-80 border-r border-border bg-card flex flex-col">
-            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Media</span><Button variant="outline" size="sm"><Upload className="h-3 w-3" /></Button></div>
-            <ScrollArea className="flex-1"><div className="p-2 text-center text-muted-foreground text-sm py-8"><Image className="h-8 w-8 mx-auto mb-2 opacity-50" /><p>No media files</p><Button variant="outline" size="sm" className="mt-2"><Upload className="h-3 w-3 mr-1" /> Add Media</Button></div></ScrollArea>
+            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Media / Sources</span><Button variant="outline" size="sm" onClick={() => setMediaFiles([...mediaFiles, { id: `media-${Date.now()}`, name: `Media ${mediaFiles.length + 1}`, type: "image" }])}><Upload className="h-3 w-3" /></Button></div>
+            <ScrollArea className="flex-1">
+              <div className="p-2 space-y-1">
+                {mediaFiles.length === 0 ? (
+                  <div className="p-4 text-center text-muted-foreground text-sm py-8"><Image className="h-8 w-8 mx-auto mb-2 opacity-50" /><p>No media files</p><Button variant="outline" size="sm" className="mt-2" onClick={() => setMediaFiles([...mediaFiles, { id: `media-${Date.now()}`, name: `Image ${mediaFiles.length + 1}`, type: "image" }])}><Upload className="h-3 w-3 mr-1" /> Add Media</Button></div>
+                ) : mediaFiles.map((media) => (
+                  <div key={media.id} className="flex items-center gap-2 p-2 rounded hover:bg-accent/10">
+                    <Image className="h-4 w-4" />
+                    <span className="flex-1 text-sm truncate">{media.name}</span>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" className="h-6 w-6" title="Toggle visibility"><Eye className="h-3 w-3" /></Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" title="Lock"><Radio className="h-3 w-3" /></Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setMediaFiles(mediaFiles.filter(m => m.id !== media.id))}><X className="h-3 w-3" /></Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
           </aside>
         )}
 
@@ -617,25 +653,51 @@ export default function PanelPage() {
 
         {activeTab === "schedule" && (
           <aside className="w-80 border-r border-border bg-card flex flex-col">
-            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Schedule / Setlist</span><Button variant="outline" size="sm"><Plus className="h-3 w-3" /></Button></div>
-            <ScrollArea className="flex-1"><div className="p-2 text-center text-muted-foreground text-sm py-8"><ListMusic className="h-8 w-8 mx-auto mb-2 opacity-50" /><p>No items in schedule</p><p className="text-xs mt-1">Add songs or Bible passages</p></div></ScrollArea>
+            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Schedule / Setlist</span><Button variant="outline" size="sm" onClick={() => { if (selectedSong) setScheduleItems([...scheduleItems, { id: `schedule-${Date.now()}`, type: "song", itemId: selectedSong.id, title: selectedSong.title, order: scheduleItems.length + 1 }]); }}><Plus className="h-3 w-3" /></Button></div>
+            <ScrollArea className="flex-1">
+              {scheduleItems.length === 0 ? (
+                <div className="p-4 text-center text-muted-foreground text-sm py-8"><ListMusic className="h-8 w-8 mx-auto mb-2 opacity-50" /><p>No items in schedule</p><p className="text-xs mt-1">Add songs or Bible passages</p></div>
+              ) : (
+                <div className="p-2 space-y-1">
+                  {scheduleItems.map((item, idx) => (
+                    <div key={item.id} className="flex items-center gap-2 p-2 rounded hover:bg-accent/10 cursor-pointer">
+                      <span className="text-xs text-muted-foreground w-5">{idx + 1}.</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm truncate">{item.title}</div>
+                        <div className="text-xs text-muted-foreground">{item.type}</div>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setScheduleItems(scheduleItems.filter(s => s.id !== item.id))}><X className="h-3 w-3" /></Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
           </aside>
         )}
 
         {activeTab === "host" && (
           <aside className="w-80 border-r border-border bg-card flex flex-col">
-            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Host / vMix</span><Button variant="outline" size="sm" title="Connect"><Wifi className="h-3 w-3" /></Button></div>
-            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><VideoIcon className="h-3 w-3" /> Connection</CardTitle></CardHeader><CardContent className="space-y-3"><div className="space-y-2"><Label>URL</Label><Input placeholder="http://localhost:8080" /></div><div className="space-y-2"><Label>API Key</Label><Input placeholder="Enter API key" type="password" /></div><Button className="w-full"><Wifi className="h-3 w-3 mr-1" /> Connect</Button></CardContent></Card>
-            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><LayersIcon className="h-3 w-3" /> Sources</CardTitle></CardHeader><CardContent><div className="text-center text-muted-foreground text-sm py-4"><p>No sources connected</p><p className="text-xs">Connect to vMix to see sources</p></div></CardContent></Card>
+            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Host / vMix</span><Button variant="outline" size="sm" title="Connect" onClick={() => { if (hostConnection === "disconnected") setHostConnection("connecting"); else setHostConnection("disconnected"); }}><RefreshCw className={`h-3 w-3 ${hostConnection === "connecting" ? "animate-spin" : ""}`} /></Button></div>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><VideoIcon className="h-3 w-3" /> Connection
+              <Badge variant={hostConnection === "connected" ? "default" : "secondary"} className="ml-auto text-xs">{hostConnection}</Badge>
+            </CardTitle></CardHeader><CardContent className="space-y-3"><div className="space-y-2"><Label>URL</Label><Input placeholder="http://localhost:8088" value={hostUrl} onChange={(e) => setHostUrl(e.target.value)} /></div><div className="space-y-2"><Label>API Key</Label><Input placeholder="Enter API key" type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} /></div><Button className="w-full" onClick={() => { setHostConnection("connecting"); setTimeout(() => setHostConnection("connected"), 1500); }} disabled={hostConnection === "connected"}><Wifi className="h-3 w-3 mr-1" /> {hostConnection === "connected" ? "Connected" : "Connect"}</Button></CardContent></Card>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><LayersIcon className="h-3 w-3" /> Sources</CardTitle></CardHeader><CardContent>
+              {hostConnection !== "connected" ? <div className="text-center text-muted-foreground text-sm py-4"><p>Not connected</p><p className="text-xs">Connect to see sources</p></div> : <div className="text-center text-muted-foreground text-sm py-4"><p>No sources</p></div>}
+            </CardContent></Card>
           </aside>
         )}
 
         {activeTab === "annotate" && (
           <aside className="w-80 border-r border-border bg-card flex flex-col">
-            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Annotation Tools</span><Button variant="outline" size="sm" title="Clear all"><Eraser className="h-3 w-3" /></Button></div>
-            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Tools</CardTitle></CardHeader><CardContent><div className="grid grid-cols-4 gap-2"><Button variant="outline" size="icon" title="Pen"><Pen className="h-4 w-4" /></Button><Button variant="outline" size="icon" title="Highlighter"><Highlighter className="h-4 w-4" /></Button><Button variant="outline" size="icon" title="Eraser"><Eraser className="h-4 w-4" /></Button><Button variant="outline" size="icon" title="Text"><TypeIcon className="h-4 w-4" /></Button></div></CardContent></Card>
-            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Color</CardTitle></CardHeader><CardContent><div className="flex gap-1 flex-wrap">{quickColors.map(c => <Button key={c} variant="outline" size="icon" className="w-6 h-6" style={{backgroundColor: c}} />)}</div></CardContent></Card>
-            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Stroke Width</CardTitle></CardHeader><CardContent><Slider defaultValue={[3]} min={1} max={20} step={1} /></CardContent></Card>
+            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Annotation Tools</span><Button variant="outline" size="sm" title="Clear all" onClick={() => setAnnotations([])}><Eraser className="h-3 w-3" /></Button></div>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Tools</CardTitle></CardHeader><CardContent><div className="grid grid-cols-4 gap-2">
+              <Button variant={selectedAnnotationTool === "pen" ? "secondary" : "outline"} size="icon" title="Pen" onClick={() => setSelectedAnnotationTool("pen")}><Pen className="h-4 w-4" /></Button>
+              <Button variant={selectedAnnotationTool === "highlighter" ? "secondary" : "outline"} size="icon" title="Highlighter" onClick={() => setSelectedAnnotationTool("highlighter")}><Highlighter className="h-4 w-4" /></Button>
+              <Button variant={selectedAnnotationTool === "eraser" ? "secondary" : "outline"} size="icon" title="Eraser" onClick={() => setSelectedAnnotationTool("eraser")}><Eraser className="h-4 w-4" /></Button>
+              <Button variant={selectedAnnotationTool === "text" ? "secondary" : "outline"} size="icon" title="Text" onClick={() => setSelectedAnnotationTool("text")}><TypeIcon className="h-4 w-4" /></Button>
+            </div></CardContent></Card>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Color</CardTitle></CardHeader><CardContent><div className="flex gap-1 flex-wrap">{quickColors.map(c => <Button key={c} variant={annotationColor === c ? "secondary" : "outline"} size="icon" className="w-6 h-6" style={{backgroundColor: c}} onClick={() => setAnnotationColor(c)} />)}</div></CardContent></Card>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Stroke: {annotationStroke}px</CardTitle></CardHeader><CardContent><Slider value={[annotationStroke]} onValueChange={(v) => setAnnotationStroke(Array.isArray(v) ? v[0] : v)} min={1} max={20} step={1} /></CardContent></Card>
           </aside>
         )}
 
@@ -814,8 +876,31 @@ export default function PanelPage() {
               <Card>
                 <CardHeader><CardTitle className="flex items-center gap-2"><Settings className="h-4 w-4" /> Live Controls</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2"><Label>Lines per Page</Label><Slider value={linesPerPage} onValueChange={(v) => setLinesPerPage(Array.isArray(v) ? v[0] : v)} min={1} max={6} step={1} /><div className="flex justify-between text-xs text-muted-foreground"><span>1</span><span>Current: {linesPerPage}</span><span>6</span></div></div>
-                  <div className="grid grid-cols-2 gap-4"><div className="flex items-center justify-between p-3 rounded-lg bg-muted"><Label className="text-sm">Auto Advance</Label><Switch checked={autoAdvance} onCheckedChange={setAutoAdvance} /></div><div className="flex items-center justify-between p-3 rounded-lg bg-muted"><Label className="text-sm">Show Lyrics</Label><Switch defaultChecked /></div></div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Label className="col-span-3 text-xs text-muted-foreground">Lines per Page</Label>
+                    <div className="col-span-3 flex gap-1">
+                      {[1,2,3,4,5,6].map(n => <Button key={n} variant={linesPerPage === n ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setLinesPerPage(n)}>{n}</Button>)}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Label className="col-span-3 text-xs text-muted-foreground">Display Mode</Label>
+                    <div className="col-span-3 flex gap-1">
+                      <Button variant={displayMode === "full" ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setDisplayMode("full")}>FS</Button>
+                      <Button variant={displayMode === "lt" ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setDisplayMode("lt")}>LT</Button>
+                      <Button variant={displayMode === "custom" ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setDisplayMode("custom")}>Custom</Button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    <Label className="col-span-4 text-xs text-muted-foreground">Background</Label>
+                    <div className="col-span-4 flex gap-1">
+                      <Button variant={bgType === "solid" ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setBgType("solid")}>BG</Button>
+                      <Button variant={bgType === "gradient" ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setBgType("gradient")}>GB</Button>
+                      <Button variant="outline" size="sm" className="flex-1">Image</Button>
+                      <Button variant="outline" size="sm" className="flex-1">Video</Button>
+                    </div>
+                  </div>
+                  <div className="space-x-2"><Label>Color:</Label><Input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-8 h-8 p-0.5" /><span className="text-sm text-muted-foreground">{bgColor}</span></div>
+                  <div className="grid grid-cols-2 gap-4"><div className="flex items-center justify-between p-3 rounded-lg bg-muted"><Label className="text-sm">Auto Advance</Label><Switch checked={autoAdvance} onCheckedChange={setAutoAdvance} /></div><div className="flex items-center justify-between p-3 rounded-lg bg-muted"><Label className="text-sm">Auto Go Live</Label><Switch checked={autoGoLive} onCheckedChange={setAutoGoLive} /></div></div>
                 </CardContent>
               </Card>
             </div>
