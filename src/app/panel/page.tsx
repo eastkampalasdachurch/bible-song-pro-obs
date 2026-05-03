@@ -680,6 +680,12 @@ export default function PanelPage() {
                   <Input placeholder="Artist name..." value={newSongArtist} onChange={(e) => setNewSongArtist(e.target.value)} />
                 </div>
               </div>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1">Search Lyrics</Button>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                No lyrics fetched
+              </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setShowNewSongModal(false)}>Cancel</Button>
                 <Button onClick={() => {
@@ -1144,7 +1150,14 @@ export default function PanelPage() {
 
         {activeTab === "schedule" && (
           <aside className="w-80 border-r border-border bg-card flex flex-col">
-            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Schedule / Setlist</span><Button variant="outline" size="sm" onClick={() => { if (selectedSong) setScheduleItems([...scheduleItems, { id: `schedule-${Date.now()}`, type: "song", itemId: selectedSong.id, title: selectedSong.title, order: scheduleItems.length + 1 }]); }}><Plus className="h-3 w-3" /></Button></div>
+            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Schedule / Setlist</span><Button variant="outline" size="sm" onClick={() => {
+              if (selectedSong) {
+                setScheduleItems([...scheduleItems, { id: `schedule-${Date.now()}`, type: "song", itemId: selectedSong.id, title: selectedSong.title, order: scheduleItems.length + 1 }]);
+              } else if (selectedBook && selectedChapter) {
+                const title = `${selectedBook.name} ${selectedChapter}`;
+                setScheduleItems([...scheduleItems, { id: `schedule-${Date.now()}`, type: "bible", itemId: `${selectedBook.id}-${selectedChapter}`, title, order: scheduleItems.length + 1 }]);
+              }
+            }}><Plus className="h-3 w-3" /></Button></div>
             <ScrollArea className="flex-1">
               {scheduleItems.length === 0 ? (
                 <div className="p-4 text-center text-muted-foreground text-sm py-8"><ListMusic className="h-8 w-8 mx-auto mb-2 opacity-50" /><p>No items in schedule</p><p className="text-xs mt-1">Add songs or Bible passages</p></div>
