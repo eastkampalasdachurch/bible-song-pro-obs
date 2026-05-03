@@ -205,6 +205,7 @@ const BIBLE_VERSIONS = [
 type ToolbarTab = "bible" | "songs" | "scenes" | "media" | "audio" | "schedule" | "host" | "annotate";
 
 export default function PanelPage() {
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<ToolbarTab>("bible");
   const [settingsTab, setSettingsTab] = useState("fullscreen");
   const [isLive, setIsLive] = useState(false);
@@ -374,87 +375,46 @@ export default function PanelPage() {
 
   // Bible API functions with fallback system
   const fetchChapter = async (book: string, chapter: number, translation: string = "KJV") => {
-    // Try bible.helloao.org first (as requested by user)
+    // Try bible-api.com first (reliable API)
     try {
-      const bookMapping: { [key: string]: string } = {
-        'Genesis': 'GEN', 'Exodus': 'EXO', 'Leviticus': 'LEV', 'Numbers': 'NUM', 'Deuteronomy': 'DEU',
-        'Joshua': 'JOS', 'Judges': 'JDG', 'Ruth': 'RUT', '1 Samuel': '1SA', '2 Samuel': '2SA',
-        '1 Kings': '1KI', '2 Kings': '2KI', '1 Chronicles': '1CH', '2 Chronicles': '2CH',
-        'Ezra': 'EZR', 'Nehemiah': 'NEH', 'Esther': 'EST', 'Job': 'JOB', 'Psalms': 'PSA',
-        'Proverbs': 'PRO', 'Ecclesiastes': 'ECC', 'Song of Solomon': 'SNG', 'Isaiah': 'ISA',
-        'Jeremiah': 'JER', 'Lamentations': 'LAM', 'Ezekiel': 'EZE', 'Daniel': 'DAN',
-        'Hosea': 'HOS', 'Joel': 'JOL', 'Amos': 'AMO', 'Obadiah': 'OBA', 'Jonah': 'JON',
-        'Micah': 'MIC', 'Nahum': 'NAM', 'Habakkuk': 'HAB', 'Zephaniah': 'ZEP', 'Haggai': 'HAG',
-        'Zechariah': 'ZEC', 'Malachi': 'MAL', 'Matthew': 'MAT', 'Mark': 'MRK', 'Luke': 'LUK',
-        'John': 'JHN', 'Acts': 'ACT', 'Romans': 'ROM', '1 Corinthians': '1CO', '2 Corinthians': '2CO',
-        'Galatians': 'GAL', 'Ephesians': 'EPH', 'Philippians': 'PHP', 'Colossians': 'COL',
-        '1 Thessalonians': '1TH', '2 Thessalonians': '2TH', '1 Timothy': '1TI', '2 Timothy': '2TI',
-        'Titus': 'TIT', 'Philemon': 'PHM', 'Hebrews': 'HEB', 'James': 'JAS', '1 Peter': '1PE',
-        '2 Peter': '2PE', '1 John': '1JN', '2 John': '2JN', '3 John': '3JN', 'Jude': 'JUD',
-        'Revelation': 'REV'
-      };
+      const bookName = book.toLowerCase().replace(/\s+/g, '');
+      let translationParam = '';
 
-      const bookId = bookMapping[book] || book.toUpperCase().substring(0, 3);
-      const response = await fetch(`https://bible.helloao.org/api/${translation}/${bookId}/${chapter}.json`);
+      // Map translation IDs for bible-api.com
+      if (translation === 'KJV') {
+        // KJV is default
+      } else if (translation === 'BSB') {
+        // BSB not available, use KJV
+      } else if (translation === 'web') {
+        translationParam = '?translation=web';
+      }
+
+      const response = await fetch(`https://bible-api.com/${bookName}+${chapter}${translationParam}`);
 
       if (!response.ok) {
         throw new Error(`Primary API request failed: ${response.status}`);
       }
 
-      const text = await response.text();
-      if (text.includes('<!doctype') || text.includes('<html')) {
-        throw new Error('Primary API returned HTML instead of JSON');
+      const chapterData = await response.json();
+
+      // Transform bible-api.com response to match expected format
+      if (chapterData.verses && Array.isArray(chapterData.verses)) {
+        return {
+          chapter: {
+            content: chapterData.verses.map((verse: any) => ({
+              type: 'verse',
+              number: verse.verse,
+              content: [verse.text.replace(/\n/g, ' ').trim()]
+            }))
+          }
+        };
       }
 
-      const chapterData = JSON.parse(text);
-      return chapterData;
+      throw new Error('Primary API returned unexpected format');
 
     } catch (error) {
-      console.warn('bible.helloao.org failed, trying fallback API:', error);
-
-      // Fallback to bible-api.com
-      try {
-        const bookName = book.toLowerCase();
-        let translationParam = '';
-
-        // Map translation IDs for fallback API
-        if (translation === 'KJV') {
-          translationParam = '?translation=kjv';
-        } else if (translation === 'BSB') {
-          // BSB not available in fallback, use WEB
-          translationParam = '';
-        } else if (translation === 'web') {
-          // WEB is the default for bible-api.com
-          translationParam = '';
-        }
-
-        const response = await fetch(`https://bible-api.com/${bookName}+${chapter}${translationParam}`);
-
-        if (!response.ok) {
-          throw new Error(`Fallback API request failed: ${response.status}`);
-        }
-
-        const chapterData = await response.json();
-
-        // Transform bible-api.com response to match our expected format
-        if (chapterData.verses && Array.isArray(chapterData.verses)) {
-          return {
-            chapter: {
-              content: chapterData.verses.map((verse: any) => ({
-                type: 'verse',
-                number: verse.verse,
-                content: [verse.text.replace(/\n/g, ' ').trim()]
-              }))
-            }
-          };
-        }
-
-        throw new Error('Fallback API returned unexpected format');
-
-      } catch (fallbackError) {
-        console.error('Both APIs failed:', fallbackError);
-        return { error: 'Failed to load Bible chapter from any API', fallback: true };
-      }
+      console.error('Failed to load Bible chapter:', error);
+      return { error: 'Failed to load Bible chapter. Please check your internet connection.', fallback: true };
     }
   };
 
@@ -462,8 +422,9 @@ export default function PanelPage() {
   // Primary: bible.helloao.org (KJV, BSB) - Fallback: bible-api.com (KJV, WEB)
   // Provides reliable Bible content with automatic failover
 
-  // localStorage persistence
+  // Client-side mounting and localStorage persistence
   useEffect(() => {
+    setMounted(true);
     const saved = localStorage.getItem("bible-song-pro-settings");
     if (saved) {
       try {
@@ -640,11 +601,12 @@ export default function PanelPage() {
               verseText = verse.content;
             }
 
-            content += verseText.replace(/\n/g, ' ').trim() + ' ';
+            // Add verse number and separate with newlines
+            content += verse.number + ' ' + verseText.replace(/\n/g, ' ').trim() + '\n';
           }
         }
 
-        setFetchedLyrics([content.trim()]);
+        setFetchedLyrics(content.trim().split('\n').filter(line => line.trim()));
         setLineCursor(0);
       } else if (chapterData && chapterData.verses && Array.isArray(chapterData.verses)) {
         // bible-api.com fallback format
@@ -657,11 +619,12 @@ export default function PanelPage() {
 
         for (const verse of selectedVerses) {
           if (verse && verse.text) {
-            content += verse.text.replace(/\n/g, ' ').trim() + ' ';
+            // Add verse number and separate with newlines
+            content += verse.verse + ' ' + verse.text.replace(/\n/g, ' ').trim() + '\n';
           }
         }
 
-        setFetchedLyrics([content.trim()]);
+        setFetchedLyrics(content.trim().split('\n').filter(line => line.trim()));
         setLineCursor(0);
       } else {
         console.warn('No chapter content found in API response:', chapterData);
@@ -783,11 +746,20 @@ export default function PanelPage() {
       return selectedSong.lyrics.slice(songLineCursor * linesPerPage, (songLineCursor + 1) * linesPerPage).join("\n");
     }
     if (fetchedLyrics.length > 0) {
+      // Show all verses at once when specific verses are selected
+      if (verseStart) {
+        return fetchedLyrics.join("\n");
+      }
+      // Paginate when showing full chapter
       return fetchedLyrics.slice(lineCursor * linesPerPage, (lineCursor + 1) * linesPerPage).join("\n");
     }
     if (selectedBook && selectedChapter) return `${selectedBook.name} ${selectedChapter}`;
     return selectedItem?.title || "";
   };
+
+  if (!mounted) {
+    return <div className="min-h-screen bg-background text-foreground flex items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
