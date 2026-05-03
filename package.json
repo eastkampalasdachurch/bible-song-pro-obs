@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Bible Song for SDA Hymns and Bible",
   "main": "dist/server/main.js",
-  "author": "East Kampala SDA Church",
+  "author": "vernonthedev",
   "private": true,
   "scripts": {
     "clean": "rm -rf dist ts-dist",
@@ -23,7 +23,7 @@
   },
   "build": {
     "appId": "com.sdabiblesongpro.desktop",
-    "productName": "Bible Song Pro",
+    "productName": "SDA Bible Song Pro",
     "files": [
       "src/**/*.html",
       "assets/**/*",
@@ -54,7 +54,7 @@
         "portable"
       ],
       "icon": "bible-song-pro-icon.ico",
-      "publisherName": "Johnson Olakotan"
+      "publisherName": "East Kampala SDA Church"
     },
     "nsis": {
       "oneClick": false,
