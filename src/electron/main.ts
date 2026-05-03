@@ -1,5 +1,10 @@
 // @ts-nocheck
 import { app, BrowserWindow, ipcMain, screen, shell, clipboard } from 'electron';
+import * as http from 'http';
+import * as path from 'path';
+import * as os from 'os';
+import * as fs from 'fs';
+import { WebSocketServer, WebSocket } from 'ws';
 
 interface DisplayInfo {
   id: number;
@@ -157,7 +162,7 @@ function createMainWindow(): void {
     }
   });
 
-  mainWindow.loadFile(resolveAppFile('panel.html'));
+  mainWindow.loadURL('http://localhost:3000/panel');
   mainWindow.on('closed', () => {
     mainWindow = null;
     if (outputWindow && !outputWindow.isDestroyed()) {
