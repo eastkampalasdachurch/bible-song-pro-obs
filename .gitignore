@@ -3,14 +3,11 @@
 node_modules/
 .next/
 ts-dist/
+dist/
 
 # Build outputs
 *.log
 *.tmp
-
-# Dist build (except electron for desktop app)
-dist/
-!dist/electron
 
 # Electron
 electron/resources/win-iconset/

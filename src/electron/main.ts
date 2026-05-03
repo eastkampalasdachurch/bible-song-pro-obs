@@ -6,8 +6,8 @@ import * as os from 'os';
 import * as fs from 'fs';
 import { spawn } from 'child_process';
 import { WebSocketServer, WebSocket } from 'ws';
-  id: number;
-  label: string;
+
+interface DisplayInfo {
   width: number;
   height: number;
   x: number;
