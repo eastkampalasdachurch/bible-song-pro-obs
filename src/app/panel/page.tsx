@@ -222,6 +222,13 @@ export default function PanelPage() {
   const [hostConnection, setHostConnection] = useState<"disconnected" | "connecting" | "connected">("disconnected");
   const [hostUrl, setHostUrl] = useState("localhost:8088");
   const [apiKey, setApiKey] = useState("");
+  const [hostMode, setHostMode] = useState<"obs" | "vmix" | "standalone">("obs");
+  const [autoReconnect, setAutoReconnect] = useState(true);
+  const [studioMode, setStudioMode] = useState(false);
+  
+  // Remote Show
+  const [remoteShowEnabled, setRemoteShowEnabled] = useState(false);
+  const [pairCode, setPairCode] = useState("");
   
   // Media files
   const [mediaFiles, setMediaFiles] = useState<{id: string; name: string; type: string}[]>([]);
@@ -284,6 +291,7 @@ export default function PanelPage() {
   const [masterVolume, setMasterVolume] = useState(100);
   const [monitorVolume, setMonitorVolume] = useState(0);
   const [monitorMuted, setMonitorMuted] = useState(true);
+  const [audioBarOpacity, setAudioBarOpacity] = useState(80);
 
   const [theme, setTheme] = useState("dark");
   const [language, setLanguage] = useState("en");
@@ -359,6 +367,8 @@ export default function PanelPage() {
   const [fsShadowOpacity, setFsShadowOpacity] = useState(0);
   const [fsShadowBlur, setFsShadowBlur] = useState(10);
   const [fsShadowOffset, setFsShadowOffset] = useState(5);
+  const [fsBgOpacity, setFsBgOpacity] = useState(100);
+  const [ltBgOpacity, setLtBgOpacity] = useState(100);
 
   // Lowerthird Mode Settings
   const [ltFontSize, setLtFontSize] = useState(36);
@@ -679,6 +689,7 @@ export default function PanelPage() {
             <div className="p-3 border-b"><span className="font-medium">Audio</span></div>
             <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Master Volume</CardTitle></CardHeader><CardContent><div className="space-y-2"><Slider value={masterVolume} onValueChange={(v) => setMasterVolume(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={1} /><div className="flex justify-between text-xs text-muted-foreground"><span>0</span><span>{masterVolume}%</span><span>100</span></div></div></CardContent></Card>
             <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Mic className="h-3 w-3" /> Monitor</CardTitle></CardHeader><CardContent><div className="space-y-2"><div className="flex items-center justify-between"><Label>Muted</Label><Switch checked={monitorMuted} onCheckedChange={setMonitorMuted} /></div>{!monitorMuted && <Slider value={monitorVolume} onValueChange={(v) => setMonitorVolume(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={1} />}</div></CardContent></Card>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">BBG / Audio Bar</CardTitle></CardHeader><CardContent><div className="space-y-2"><Slider value={audioBarOpacity} onValueChange={(v) => setAudioBarOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /><div className="flex justify-between text-xs text-muted-foreground"><span>0</span><span>{audioBarOpacity}%</span><span>100</span></div></div></CardContent></Card>
           </aside>
         )}
 
@@ -709,11 +720,19 @@ export default function PanelPage() {
         {activeTab === "host" && (
           <aside className="w-80 border-r border-border bg-card flex flex-col">
             <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Host / vMix</span><Button variant="outline" size="sm" title="Connect" onClick={() => { if (hostConnection === "disconnected") setHostConnection("connecting"); else setHostConnection("disconnected"); }}><RefreshCw className={`h-3 w-3 ${hostConnection === "connecting" ? "animate-spin" : ""}`} /></Button></div>
-            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><VideoIcon className="h-3 w-3" /> Connection
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><VideoIcon className="h-3 w-3" /> Host Mode
               <Badge variant={hostConnection === "connected" ? "default" : "secondary"} className="ml-auto text-xs">{hostConnection}</Badge>
-            </CardTitle></CardHeader><CardContent className="space-y-3"><div className="space-y-2"><Label>URL</Label><Input placeholder="http://localhost:8088" value={hostUrl} onChange={(e) => setHostUrl(e.target.value)} /></div><div className="space-y-2"><Label>API Key</Label><Input placeholder="Enter API key" type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} /></div><Button className="w-full" onClick={() => { setHostConnection("connecting"); setTimeout(() => setHostConnection("connected"), 1500); }} disabled={hostConnection === "connected"}><Wifi className="h-3 w-3 mr-1" /> {hostConnection === "connected" ? "Connected" : "Connect"}</Button></CardContent></Card>
+            </CardTitle></CardHeader><CardContent className="space-y-3"><Select defaultValue="obs"><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="obs">OBS Studio</SelectItem><SelectItem value="vmix">vMix</SelectItem><SelectItem value="standalone">Standalone</SelectItem></SelectContent></Select><div className="space-y-2"><Label>URL</Label><Input placeholder="http://localhost:8088" value={hostUrl} onChange={(e) => setHostUrl(e.target.value)} /></div><div className="space-y-2"><Label>API Key</Label><Input placeholder="Enter API key" type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} /></div><Button className="w-full" onClick={() => { setHostConnection("connecting"); setTimeout(() => setHostConnection("connected"), 1500); }} disabled={hostConnection === "connected"}><Wifi className="h-3 w-3 mr-1" /> {hostConnection === "connected" ? "Connected" : "Connect"}</Button></CardContent></Card>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Monitor className="h-3 w-3" /> Program Output</CardTitle></CardHeader><CardContent className="space-y-3">
+              <div className="flex items-center justify-between"><Label>Studio Mode</Label><Switch /></div>
+              <div className="flex items-center justify-between"><Label>Auto Reconnect</Label><Switch defaultChecked /></div>
+              <div className="text-xs text-muted-foreground">Status: {hostConnection === "connected" ? "Ready to receive API calls" : "Not connected"}</div>
+            </CardContent></Card>
             <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><LayersIcon className="h-3 w-3" /> Sources</CardTitle></CardHeader><CardContent>
-              {hostConnection !== "connected" ? <div className="text-center text-muted-foreground text-sm py-4"><p>Not connected</p><p className="text-xs">Connect to see sources</p></div> : <div className="text-center text-muted-foreground text-sm py-4"><p>No sources</p></div>}
+              {hostConnection !== "connected" ? <div className="text-center text-muted-foreground text-sm py-4"><p>Not connected</p><p className="text-xs">Connect to see sources</p></div> : <div className="space-y-2">
+                <div className="flex items-center gap-2 p-2 rounded border"><Checkbox defaultChecked /> <span className="flex-1 text-sm">Bible Song Pro</span><Eye className="h-3 w-3" /></div>
+                <div className="flex items-center gap-2 p-2 rounded border"><Checkbox /> <span className="flex-1 text-sm">Main Display</span></div>
+              </div>}
             </CardContent></Card>
           </aside>
         )}
@@ -747,6 +766,9 @@ export default function PanelPage() {
                     <button onClick={() => setSettingsTab("bible")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "bible" ? "bg-secondary" : "hover:bg-accent/50"}`}><Book className="h-4 w-4" /> Bible</button>
                     <button onClick={() => setSettingsTab("display")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "display" ? "bg-secondary" : "hover:bg-accent/50"}`}><Monitor className="h-4 w-4" /> Display</button>
                     <button onClick={() => setSettingsTab("animation")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "animation" ? "bg-secondary" : "hover:bg-accent/50"}`}><FlipHorizontal className="h-4 w-4" /> Animation</button>
+                    <button onClick={() => setSettingsTab("recording")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "recording" ? "bg-secondary" : "hover:bg-accent/50"}`}><Circle className="h-4 w-4" /> Recording</button>
+                    <button onClick={() => setSettingsTab("streaming")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "streaming" ? "bg-secondary" : "hover:bg-accent/50"}`}><Radio className="h-4 w-4" /> Streaming</button>
+                    <button onClick={() => setSettingsTab("remote")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "remote" ? "bg-secondary" : "hover:bg-accent/50"}`}><Wifi className="h-4 w-4" /> Remote</button>
                     <button onClick={() => setSettingsTab("theme")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "theme" ? "bg-secondary" : "hover:bg-accent/50"}`}><Palette className="h-4 w-4" /> Theme</button>
                   </div>
                 </ScrollArea>
@@ -768,6 +790,9 @@ export default function PanelPage() {
                       <div className="space-y-2"><Label>Scale: {fsScalePct}%</Label><Slider value={[fsScalePct]} onValueChange={(v) => setFsScalePct(Array.isArray(v) ? v[0] : v)} min={30} max={150} step={5} /></div>
                       <div className="space-y-2"><Label>Border Radius: {fsBorderRadius}px</Label><Slider value={[fsBorderRadius]} onValueChange={(v) => setFsBorderRadius(Array.isArray(v) ? v[0] : v)} min={0} max={50} step={1} /></div>
                       <div className="space-y-2"><Label>Shadow Opacity: {fsShadowOpacity}%</Label><Slider value={[fsShadowOpacity]} onValueChange={(v) => setFsShadowOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
+                      <div className="space-y-2"><Label>Shadow Blur: {fsShadowBlur}px</Label><Slider value={[fsShadowBlur]} onValueChange={(v) => setFsShadowBlur(Array.isArray(v) ? v[0] : v)} min={0} max={25} step={1} /></div>
+                      <div className="space-y-2"><Label>Shadow Offset: {fsShadowOffset}px</Label><Slider value={[fsShadowOffset]} onValueChange={(v) => setFsShadowOffset(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
+                      <div className="space-y-2"><Label>Background Opacity: {fsBgOpacity}%</Label><Slider value={[fsBgOpacity]} onValueChange={(v) => setFsBgOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
                     </CardContent></Card>
                     <Card><CardHeader><CardTitle className="text-sm">Reference: {fsRefFontSize}pt</CardTitle></CardHeader><CardContent><Slider value={[fsRefFontSize]} onValueChange={(v) => setFsRefFontSize(Array.isArray(v) ? v[0] : v)} min={10} max={72} step={1} /></CardContent></Card>
                   </div>
@@ -788,6 +813,7 @@ export default function PanelPage() {
                       <div className="space-y-2"><Label>Shadow Opacity: {ltShadowOpacity}%</Label><Slider value={[ltShadowOpacity]} onValueChange={(v) => setLtShadowOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
                       <div className="space-y-2"><Label>Shadow Blur: {ltShadowBlur}px</Label><Slider value={[ltShadowBlur]} onValueChange={(v) => setLtShadowBlur(Array.isArray(v) ? v[0] : v)} min={0} max={25} step={1} /></div>
                       <div className="space-y-2"><Label>Shadow Offset: {ltShadowOffset}px</Label><Slider value={[ltShadowOffset]} onValueChange={(v) => setLtShadowOffset(Array.isArray(v) ? v[0] : v)} min={0} max={15} step={1} /></div>
+                      <div className="space-y-2"><Label>Background Opacity: {ltBgOpacity}%</Label><Slider value={[ltBgOpacity]} onValueChange={(v) => setLtBgOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
                     </CardContent></Card>
                     <Card><CardHeader><CardTitle className="text-sm">Reference: {ltRefFontSize}pt</CardTitle></CardHeader><CardContent><Slider value={[ltRefFontSize]} onValueChange={(v) => setLtRefFontSize(Array.isArray(v) ? v[0] : v)} min={8} max={36} step={1} /></CardContent></Card>
                   </div>
@@ -800,6 +826,8 @@ export default function PanelPage() {
                       {bgType === "solid" && <div className="space-y-2"><Label>Color</Label><div className="flex gap-2"><Input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-16 h-10 p-1" /><Input value={bgColor} onChange={(e) => setBgColor(e.target.value)} /></div></div>}
                       {bgType === "gradient" && <><div className="space-y-2"><Label>Angle: {bgGradientAngle}</Label><Slider value={bgGradientAngle} onValueChange={(v) => setBgGradientAngle(Array.isArray(v) ? v[0] : v)} min={0} max={360} step={5} /></div><div className="grid grid-cols-2 gap-4"><div className="space-y-2"><Label>Start</Label><Input type="color" value={bgGradientStart} onChange={(e) => setBgGradientStart(e.target.value)} className="w-full h-10 p-1" /></div><div className="space-y-2"><Label>End</Label><Input type="color" value={bgGradientEnd} onChange={(e) => setBgGradientEnd(e.target.value)} className="w-full h-10 p-1" /></div></div></>}
                       {(bgType === "image" || bgType === "video") && <div className="space-y-2"><Label>URL</Label><Input placeholder="https://..." value={bgType === "image" ? bgImageUrl : bgVideoUrl} onChange={(e) => bgType === "image" ? setBgImageUrl(e.target.value) : setBgVideoUrl(e.target.value)} /></div>}
+                      {(bgType === "image" || bgType === "video") && <div className="space-y-2"><Label>Blur: {bgBlur}px</Label><Slider value={[bgBlur]} onValueChange={(v) => setBgBlur(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>}
+                      {bgType === "video" && <><div className="space-y-2"><Label>Opacity: {bgVideoOpacity}%</Label><Slider value={[bgVideoOpacity]} onValueChange={(v) => setBgVideoOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div><div className="space-y-2"><Label>Speed: {bgVideoSpeed}x</Label><Slider value={[bgVideoSpeed * 50]} onValueChange={(v) => setBgVideoSpeed((Array.isArray(v) ? v[0] : v) / 50)} min={25} max={200} step={5} /></div><div className="space-y-2"><Label>Y Offset: {bgY}</Label><Slider value={[bgY + 50]} onValueChange={(v) => setBgY((Array.isArray(v) ? v[0] : v) - 50)} min={-50} max={50} step={1} /></div></>}
                     </CardContent></Card>
                     <Card><CardHeader><CardTitle className="text-sm">Quick Colors</CardTitle></CardHeader><CardContent><div className="flex flex-wrap gap-2">{quickColors.map((c, i) => <button key={i} className="w-8 h-8 rounded border" style={{backgroundColor: c}} onClick={() => setBgColor(c)} />)}</div></CardContent></Card>
                   </div>
@@ -828,6 +856,10 @@ export default function PanelPage() {
                         <div className="space-y-2"><Label>Font: {refFontSize}pt</Label><Slider value={[refFontSize]} onValueChange={(v) => setRefFontSize(Array.isArray(v) ? v[0] : v)} min={10} max={48} step={1} /></div>
                         <div className="space-y-2"><Label>Line: {refLineHeight}</Label><Slider value={refLineHeight * 50} onValueChange={(v) => setRefLineHeight((Array.isArray(v) ? v[0] : v) / 50)} min={80} max={180} step={5} /></div>
                         <div className="space-y-2"><Label>Opacity: {refOpacity}%</Label><Slider value={[refOpacity]} onValueChange={(v) => setRefOpacity(Array.isArray(v) ? v[0] : v)} min={20} max={100} step={5} /></div>
+                        <div className="space-y-2"><Label>Word Spacing: {refWordSpacing}px</Label><Slider value={[refWordSpacing + 5]} onValueChange={(v) => setRefWordSpacing((Array.isArray(v) ? v[0] : v) - 5)} min={0} max={10} step={1} /></div>
+                        <div className="space-y-2"><Label>Letter Spacing: {refLetterSpacing}px</Label><Slider value={[refLetterSpacing + 2]} onValueChange={(v) => setRefLetterSpacing((Array.isArray(v) ? v[0] : v) - 2)} min={0} max={5} step={1} /></div>
+                        <div className="space-y-2"><Label>Border Width: {refBorderWidth}px</Label><Slider value={[refBorderWidth]} onValueChange={(v) => setRefBorderWidth(Array.isArray(v) ? v[0] : v)} min={0} max={10} step={1} /></div>
+                        <div className="space-y-2"><Label>Border Radius: {refBorderRadius}px</Label><Slider value={[refBorderRadius]} onValueChange={(v) => setRefBorderRadius(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
                       </div>}
                     </CardContent></Card>
                   </div>
@@ -838,6 +870,62 @@ export default function PanelPage() {
                     <Card><CardHeader><CardTitle className="text-sm">Transition</CardTitle></CardHeader><CardContent className="space-y-4">
                       <Select value={transitionType} onValueChange={(v) => setTransitionType(v as "none" | "fade" | "slide" | "dissolve")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem><SelectItem value="fade">Fade</SelectItem><SelectItem value="slide">Slide</SelectItem><SelectItem value="dissolve">Dissolve</SelectItem></SelectContent></Select>
                       <div className="space-y-2"><Label>Duration: {transitionDuration}s</Label><Slider value={transitionDuration * 100} onValueChange={(v) => setTransitionDuration((Array.isArray(v) ? v[0] : v) / 100)} min={25} max={200} step={5} /></div>
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Song Progress</CardTitle></CardHeader><CardContent className="space-y-4">
+                      <div className="space-y-2"><Label>Line Transition: {transitionDuration}s</Label><Slider value={transitionDuration * 100} onValueChange={(v) => setTransitionDuration((Array.isArray(v) ? v[0] : v) / 100)} min={0} max={200} step={5} /></div>
+                    </CardContent></Card>
+                  </div>
+                )}
+
+                {settingsTab === "streaming" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm flex items-center gap-2"><CircleDot className={`h-3 w-3 ${isStreaming ? "text-red-500" : ""}`} /> Streaming</CardTitle></CardHeader><CardContent className="space-y-4">
+                      <div className="flex items-center justify-between"><Label>Start Streaming</Label><Switch checked={isStreaming} onCheckedChange={setIsStreaming} /></div>
+                      {isStreaming && <div className="text-xs text-green-500 flex items-center gap-1"><CircleDot className="h-2 w-2" /> Live</div>}
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Stream Destinations</CardTitle></CardHeader><CardContent className="space-y-2">
+                      <div className="flex items-center gap-2 p-2 rounded border"><Checkbox /> <span className="text-sm">RTMP Server</span></div>
+                      <div className="flex items-center gap-2 p-2 rounded border"><Checkbox /> <span className="text-sm">YouTube Live</span></div>
+                      <div className="flex items-center gap-2 p-2 rounded border"><Checkbox /> <span className="text-sm">Twitch</span></div>
+                      <Button variant="outline" size="sm" className="w-full mt-2">Configure Destinations</Button>
+                    </CardContent></Card>
+                  </div>
+                )}
+
+                {settingsTab === "remote" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm flex items-center gap-2"><Wifi className="h-3 w-3" /> Remote Show</CardTitle></CardHeader><CardContent className="space-y-4">
+                      <div className="flex items-center justify-between"><Label>Enable Remote</Label><Switch checked={remoteShowEnabled} onCheckedChange={setRemoteShowEnabled} /></div>
+                      {remoteShowEnabled && <div className="space-y-2">
+                        <div className="text-xs text-muted-foreground">Share this code with your phone/remote device:</div>
+                        <div className="flex gap-2"><Input value={pairCode || "------"} readOnly className="font-mono text-center text-lg tracking-widest" /><Button variant="outline" size="icon" onClick={() => setPairCode(Math.random().toString(36).slice(2, 8).toUpperCase())}><RefreshCw className="h-4 w-4" /></Button></div>
+                      </div>}
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Connection</CardTitle></CardHeader><CardContent className="space-y-3">
+                      <div className="space-y-2"><Label>Server URL</Label><Input placeholder="localhost:8089" /></div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground"><Wifi className="h-3 w-3" /> Remote device connects via browser</div>
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Permissions</CardTitle></CardHeader><CardContent className="space-y-2">
+                      <div className="flex items-center gap-2"><Checkbox defaultChecked /> <span className="text-sm">Allow remote control</span></div>
+                      <div className="flex items-center gap-2"><Checkbox defaultChecked /> <span className="text-sm">Allow song requests</span></div>
+                      <div className="flex items-center gap-2"><Checkbox /> <span className="text-sm">Allow schedule editing</span></div>
+                    </CardContent></Card>
+                  </div>
+                )}
+
+                {settingsTab === "recording" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm flex items-center gap-2"><Circle className={`h-3 w-3 ${isRecording ? "text-red-500" : ""}`} /> Recording</CardTitle></CardHeader><CardContent className="space-y-4">
+                      <div className="flex items-center justify-between"><Label>Start Recording</Label><Switch checked={isRecording} onCheckedChange={setIsRecording} /></div>
+                      {isRecording && <div className="text-xs text-red-500 flex items-center gap-1"><Circle className="h-2 w-2 animate-pulse" /> Recording...</div>}
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Recording Format</CardTitle></CardHeader><CardContent className="space-y-3">
+                      <Select defaultValue="mp4"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="mp4">MP4 (H.264)</SelectItem><SelectItem value="mkv">MKV (FFV1)</SelectItem><SelectItem value="mov">MOV (ProRes)</SelectItem></SelectContent></Select>
+                      <div className="space-y-2"><Label>Quality</Label><Slider defaultValue={[80]} min={50} max={100} step={5} /><div className="flex justify-between text-xs text-muted-foreground"><span>Low</span><span>High</span></div></div>
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Output Folder</CardTitle></CardHeader><CardContent className="space-y-2">
+                      <div className="flex gap-2"><Input placeholder="Videos/Bible Song Pro" className="flex-1" /><Button variant="outline" size="icon"><FolderOpen className="h-4 w-4" /></Button></div>
+                      <Button variant="outline" size="sm" className="w-full">Open Recording Folder</Button>
                     </CardContent></Card>
                   </div>
                 )}
