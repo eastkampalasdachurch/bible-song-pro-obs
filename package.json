@@ -8,7 +8,6 @@
     "build": "bun run build:next && bun run build:electron",
     "build:next": "next build",
     "build:electron": "tsc -p tsconfig.electron.json",
-    "build:electron": "tsc -p tsconfig.electron.json",
     "start": "next start",
     "lint": "eslint",
     "electron:dev": "node scripts/start-electron-dev.js",
