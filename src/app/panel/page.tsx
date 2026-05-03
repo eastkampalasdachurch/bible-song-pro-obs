@@ -410,8 +410,9 @@ export default function PanelPage() {
     }
   };
 
-  // Note: Current Bible API (bible.helloao.org) supports KJV and BSB translations
-  // The API is open source and may have additional translations available
+  // Bible API integration with bible.helloao.org
+  // Currently supports KJV and BSB - the API may have additional translations
+  // that can be added as they become available or as the API improves
 
   // localStorage persistence
   useEffect(() => {
