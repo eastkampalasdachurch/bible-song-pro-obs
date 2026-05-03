@@ -14,15 +14,18 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
-  Settings, Play, Square, ChevronLeft, ChevronRight,
+  Settings, Play, Square as SquareIcon, ChevronLeft, ChevronRight, ChevronUp, ChevronDown,
   Plus, Search, Music, Book, Calendar, Monitor,
   Volume2, Type, Image, Layers, Video, Mic,
   AlignLeft, AlignCenter, AlignRight,
-  Save, Trash2, Copy, Download, Upload,
-  Menu, X, Keyboard, FolderOpen, FileText,
-  List, ListMusic, Mic2, VolumeX,
-  Layers as LayersIcon, Eye, Clock, FlipHorizontal,
-  Palette
+  Save, Trash2, Copy, Download, Upload, Undo, Redo,
+  Menu, X, Keyboard, FolderOpen, FileText, Home,
+  List, ListMusic, Mic2, VolumeX, Volume1,
+  Layers as LayersIcon, Eye, EyeOff, Clock, FlipHorizontal, FlipVertical,
+  Maximize2, Minimize2, RotateCw, Move, ZoomIn, ZoomOut,
+  Settings2, Palette, Pen, Eraser, Highlighter, Undo2, Redo2,
+  Wifi, WifiOff, Circle, ArrowUp, VideoIcon, Radio, CircleDot,
+  Pencil, Type as TypeIcon, Minus, Trash, RefreshCw
 } from "lucide-react";
 
 interface ContentItem {
@@ -50,6 +53,19 @@ interface Scene {
   id: string;
   name: string;
   type: "song" | "bible" | "image" | "blank";
+}
+
+interface SceneSource {
+  id: string;
+  name: string;
+  type: "text" | "image" | "video" | "camera" | "audio";
+  visible: boolean;
+}
+
+interface AnnotationTool {
+  id: string;
+  name: string;
+  icon: string;
 }
 
 const BIBLE_BOOKS: BibleBook[] = [
@@ -145,10 +161,26 @@ const DEFAULT_SONGS: Song[] = [
 ];
 
 const SCENES: Scene[] = [
-  { id: "scene-1", name: "Scene 1", type: "blank" },
-  { id: "scene-2", name: "Scene 2", type: "blank" },
-  { id: "scene-3", name: "Scene 3", type: "blank" },
-  { id: "scene-4", name: "Scene 4", type: "blank" },
+  { id: "scene-1", name: "Main (Song)", type: "song" },
+  { id: "scene-2", name: "Bible Reading", type: "bible" },
+  { id: "scene-3", name: "Announcement", type: "image" },
+  { id: "scene-4", name: "Blank", type: "blank" },
+];
+
+const DEFAULT_SOURCES: SceneSource[] = [
+  { id: "source-1", name: "Main Lyrics", type: "text", visible: true },
+  { id: "source-2", name: "Reference", type: "text", visible: true },
+  { id: "source-3", name: "Background", type: "image", visible: true },
+  { id: "source-4", name: "Camera", type: "camera", visible: false },
+];
+
+const ANNOTATION_TOOLS: AnnotationTool[] = [
+  { id: "pen", name: "Pen", icon: "Pen" },
+  { id: "highlighter", name: "Highlighter", icon: "Highlighter" },
+  { id: "eraser", name: "Eraser", icon: "Eraser" },
+  { id: "text", name: "Text", icon: "Type" },
+  { id: "arrow", name: "Arrow", icon: "ArrowUp" },
+  { id: "rectangle", name: "Rectangle", icon: "Square" },
 ];
 
 const BIBLE_VERSIONS = [
@@ -158,14 +190,36 @@ const BIBLE_VERSIONS = [
   { id: "nlt", name: "New Living Translation (NLT)" },
 ];
 
-type ToolbarTab = "bible" | "songs" | "scenes" | "media" | "audio" | "schedule" | "settings";
+type ToolbarTab = "bible" | "songs" | "scenes" | "media" | "audio" | "schedule" | "host" | "annotate" | "settings";
 
 export default function PanelPage() {
   const [activeTab, setActiveTab] = useState<ToolbarTab>("bible");
   const [settingsTab, setSettingsTab] = useState("typography");
   const [isLive, setIsLive] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [songs, setSongs] = useState<Song[]>(DEFAULT_SONGS);
+  
+  // Bible lyrics API
+  const [fetchedLyrics, setFetchedLyrics] = useState<string[]>([]);
+  const [isFetchingLyrics, setIsFetchingLyrics] = useState(false);
+  const [selectedAnnotationTool, setSelectedAnnotationTool] = useState<string | null>(null);
+  const [annotations, setAnnotations] = useState<{id: string; text: string; x: number; y: number}[]>([]);
+  
+  // Host/VMix
+  const [hostConnection, setHostConnection] = useState<"disconnected" | "connecting" | "connected">("disconnected");
+  const [hostUrl, setHostUrl] = useState("localhost:8088");
+  const [apiKey, setApiKey] = useState("");
+  
+  // Media files
+  const [mediaFiles, setMediaFiles] = useState<{id: string; name: string; type: string}[]>([]);
+  
+  // Sources per scene
+  const [sceneSources, setSceneSources] = useState<Record<string, SceneSource[]>>({});
+  
+  // Active scene
+  const [activeSceneId, setActiveSceneId] = useState("scene-1");
 
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
@@ -375,6 +429,8 @@ export default function PanelPage() {
               <TabsTrigger value="scenes" className="text-xs gap-1"><LayersIcon className="h-3 w-3" /> Scenes</TabsTrigger>
               <TabsTrigger value="media" className="text-xs gap-1"><Image className="h-3 w-3" /> Media</TabsTrigger>
               <TabsTrigger value="audio" className="text-xs gap-1"><Volume2 className="h-3 w-3" /> Audio</TabsTrigger>
+              <TabsTrigger value="host" className="text-xs gap-1"><VideoIcon className="h-3 w-3" /> Host</TabsTrigger>
+              <TabsTrigger value="annotate" className="text-xs gap-1"><Pen className="h-3 w-3" /> Annotate</TabsTrigger>
               <TabsTrigger value="schedule" className="text-xs gap-1"><ListMusic className="h-3 w-3" /> Schedule</TabsTrigger>
               <TabsTrigger value="settings" className="text-xs gap-1"><Settings className="h-3 w-3" /> Settings</TabsTrigger>
             </TabsList>
@@ -382,7 +438,7 @@ export default function PanelPage() {
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleClear}><X className="h-4 w-4 mr-1" /> Clear</Button>
             <Button variant={isLive ? "destructive" : "default"} size="sm" onClick={handleGoLive} disabled={!selectedItem && !selectedSong && !selectedBook && !isLive}>
-              {isLive ? <Square className="h-4 w-4 mr-1" /> : <Play className="h-4 w-4 mr-1" />}
+              {isLive ? <SquareIcon className="h-4 w-4 mr-1" /> : <Play className="h-4 w-4 mr-1" />}
               {isLive ? "Live" : "Go Live"}
             </Button>
           </div>
@@ -476,6 +532,23 @@ export default function PanelPage() {
           <aside className="w-80 border-r border-border bg-card flex flex-col">
             <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Schedule / Setlist</span><Button variant="outline" size="sm"><Plus className="h-3 w-3" /></Button></div>
             <ScrollArea className="flex-1"><div className="p-2 text-center text-muted-foreground text-sm py-8"><ListMusic className="h-8 w-8 mx-auto mb-2 opacity-50" /><p>No items in schedule</p><p className="text-xs mt-1">Add songs or Bible passages</p></div></ScrollArea>
+          </aside>
+        )}
+
+        {activeTab === "host" && (
+          <aside className="w-80 border-r border-border bg-card flex flex-col">
+            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Host / vMix</span><Button variant="outline" size="sm" title="Connect"><Wifi className="h-3 w-3" /></Button></div>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><VideoIcon className="h-3 w-3" /> Connection</CardTitle></CardHeader><CardContent className="space-y-3"><div className="space-y-2"><Label>URL</Label><Input placeholder="http://localhost:8080" /></div><div className="space-y-2"><Label>API Key</Label><Input placeholder="Enter API key" type="password" /></div><Button className="w-full"><Wifi className="h-3 w-3 mr-1" /> Connect</Button></CardContent></Card>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><LayersIcon className="h-3 w-3" /> Sources</CardTitle></CardHeader><CardContent><div className="text-center text-muted-foreground text-sm py-4"><p>No sources connected</p><p className="text-xs">Connect to vMix to see sources</p></div></CardContent></Card>
+          </aside>
+        )}
+
+        {activeTab === "annotate" && (
+          <aside className="w-80 border-r border-border bg-card flex flex-col">
+            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Annotation Tools</span><Button variant="outline" size="sm" title="Clear all"><Eraser className="h-3 w-3" /></Button></div>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Tools</CardTitle></CardHeader><CardContent><div className="grid grid-cols-4 gap-2"><Button variant="outline" size="icon" title="Pen"><Pen className="h-4 w-4" /></Button><Button variant="outline" size="icon" title="Highlighter"><Highlighter className="h-4 w-4" /></Button><Button variant="outline" size="icon" title="Eraser"><Eraser className="h-4 w-4" /></Button><Button variant="outline" size="icon" title="Text"><TypeIcon className="h-4 w-4" /></Button></div></CardContent></Card>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Color</CardTitle></CardHeader><CardContent><div className="flex gap-1 flex-wrap">{quickColors.map(c => <Button key={c} variant="outline" size="icon" className="w-6 h-6" style={{backgroundColor: c}} />)}</div></CardContent></Card>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Stroke Width</CardTitle></CardHeader><CardContent><Slider defaultValue={[3]} min={1} max={20} step={1} /></CardContent></Card>
           </aside>
         )}
 
