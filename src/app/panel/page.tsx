@@ -197,6 +197,7 @@ const ANNOTATION_TOOLS: AnnotationTool[] = [
 ];
 
 const BIBLE_VERSIONS = [
+  { id: "kjv", name: "King James Version (KJV)" },
   { id: "web", name: "World English Bible (WEB)" },
 ];
 
@@ -245,7 +246,7 @@ export default function PanelPage() {
   const [verseStart, setVerseStart] = useState<number | null>(null);
   const [verseEnd, setVerseEnd] = useState<number | null>(null);
   const [selectedScene, setSelectedScene] = useState<Scene | null>(null);
-   const [bibleVersion, setBibleVersion] = useState("web");
+   const [bibleVersion, setBibleVersion] = useState("kjv");
 
   // Source management functions
   const getSourceTypeColor = (type: string) => {
@@ -370,12 +371,12 @@ export default function PanelPage() {
   const [translationContent, setTranslationContent] = useState("");
   const [bilingualEnabled, setBilingualEnabled] = useState(false);
 
-  // Bible API functions (using bible-api.com)
-  const fetchChapter = async (book: string, chapter: number) => {
+  // Bible API functions (using bible-api.com with KJV translation)
+  const fetchChapter = async (book: string, chapter: number, translation: string = "kjv") => {
     try {
-      // bible-api.com uses format like "genesis+1"
+      // bible-api.com uses format like "genesis+1?translation=kjv"
       const bookName = book.toLowerCase();
-      const response = await fetch(`https://bible-api.com/${bookName}+${chapter}`);
+      const response = await fetch(`https://bible-api.com/${bookName}+${chapter}?translation=${translation}`);
       const chapterData = await response.json();
       return chapterData;
     } catch (error) {
@@ -528,7 +529,7 @@ export default function PanelPage() {
   const loadChapter = async (book: BibleBook, chapter: number, verses?: { start?: number; end?: number }) => {
     setIsFetchingLyrics(true);
     try {
-      const chapterData = await fetchChapter(book.name, chapter);
+      const chapterData = await fetchChapter(book.name, chapter, bibleVersion);
       if (chapterData && chapterData.verses) {
         let content = '';
         const startVerse = verses?.start || 1;
@@ -870,7 +871,7 @@ export default function PanelPage() {
                 {settingsTab === "bible" && (
                   <div className="space-y-4">
                     <Card><CardHeader><CardTitle className="text-sm">Bible Settings</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <Select value={bibleVersion} onValueChange={(v) => setBibleVersion(v || "web")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{BIBLE_VERSIONS.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
+                      <Select value={bibleVersion} onValueChange={(v) => setBibleVersion(v || "kjv")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{BIBLE_VERSIONS.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
                       <div className="flex items-center justify-between"><Label>Dual Bible</Label><Switch checked={dualBibleEnabled} onCheckedChange={setDualBibleEnabled} /></div>
                       {dualBibleEnabled && <div className="grid grid-cols-2 gap-4">
                         <Select value={dualPrimaryVersion} onValueChange={(v) => setDualPrimaryVersion(v || "kjv")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{BIBLE_VERSIONS.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
@@ -1024,7 +1025,7 @@ export default function PanelPage() {
             <label htmlFor="auto-advance" className="cursor-pointer">Auto Advance</label>
           </div>
           <Separator orientation="vertical" className="h-4" />
-          <Select value={bibleVersion} onValueChange={(v) => setBibleVersion(v || "web")}>
+          <Select value={bibleVersion} onValueChange={(v) => setBibleVersion(v || "kjv")}>
             <SelectTrigger className="h-6 text-xs w-32"><SelectValue /></SelectTrigger>
             <SelectContent>
               {BIBLE_VERSIONS.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
