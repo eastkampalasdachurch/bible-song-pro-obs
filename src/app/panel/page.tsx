@@ -195,16 +195,7 @@ const ANNOTATION_TOOLS: AnnotationTool[] = [
 ];
 
 const BIBLE_VERSIONS = [
-  { id: "KJV", name: "King James Version (KJV)" },
-  { id: "NIV", name: "New International Version (NIV)" },
-  { id: "ESV", name: "English Standard Version (ESV)" },
-  { id: "NLT", name: "New Living Translation (NLT)" },
-  { id: "NASB", name: "New American Standard Bible (NASB)" },
-  { id: "NKJV", name: "New King James Version (NKJV)" },
-  { id: "CSB", name: "Christian Standard Bible (CSB)" },
-  { id: "AMP", name: "Amplified Bible (AMP)" },
-  { id: "MSG", name: "The Message (MSG)" },
-  { id: "NRSV", name: "New Revised Standard Version (NRSV)" },
+  { id: "web", name: "World English Bible (WEB)" },
 ];
 
 type ToolbarTab = "bible" | "songs" | "scenes" | "media" | "audio" | "schedule" | "host" | "annotate";
@@ -252,7 +243,7 @@ export default function PanelPage() {
   const [verseStart, setVerseStart] = useState<number | null>(null);
   const [verseEnd, setVerseEnd] = useState<number | null>(null);
   const [selectedScene, setSelectedScene] = useState<Scene | null>(null);
-  const [bibleVersion, setBibleVersion] = useState("kjv");
+   const [bibleVersion, setBibleVersion] = useState("web");
 
   // Source management functions
   const getSourceTypeColor = (type: string) => {
@@ -377,32 +368,12 @@ export default function PanelPage() {
   const [translationContent, setTranslationContent] = useState("");
   const [bilingualEnabled, setBilingualEnabled] = useState(false);
 
-  // Bible API functions
-  const fetchAvailableTranslations = async () => {
+  // Bible API functions (using bible-api.com)
+  const fetchChapter = async (book: string, chapter: number) => {
     try {
-      const response = await fetch('https://bible.helloao.org/api/available_translations.json');
-      const translations = await response.json();
-      return translations;
-    } catch (error) {
-      console.error('Failed to fetch translations:', error);
-      return [];
-    }
-  };
-
-  const fetchBooksForTranslation = async (translation: string) => {
-    try {
-      const response = await fetch(`https://bible.helloao.org/api/${translation}/books.json`);
-      const books = await response.json();
-      return books;
-    } catch (error) {
-      console.error('Failed to fetch books:', error);
-      return [];
-    }
-  };
-
-  const fetchChapter = async (translation: string, book: string, chapter: number) => {
-    try {
-      const response = await fetch(`https://bible.helloao.org/api/${translation}/${book}/${chapter}.json`);
+      // bible-api.com uses format like "genesis+1"
+      const bookName = book.toLowerCase();
+      const response = await fetch(`https://bible-api.com/${bookName}+${chapter}`);
       const chapterData = await response.json();
       return chapterData;
     } catch (error) {
@@ -411,25 +382,8 @@ export default function PanelPage() {
     }
   };
 
-  // Load available translations on mount
-  useEffect(() => {
-    fetchAvailableTranslations().then(translations => {
-      if (translations.length > 0) {
-        // Update BIBLE_VERSIONS with API data
-        const apiVersions = translations.map((t: any) => ({
-          id: t.identifier,
-          name: t.name
-        }));
-        // Merge with existing versions, prioritizing API versions
-        const mergedVersions = [
-          ...apiVersions,
-          ...BIBLE_VERSIONS.filter(v => !apiVersions.find((av: any) => av.id === v.id))
-        ];
-        // Update the constant (this would need refactoring for full dynamic loading)
-        console.log('Available Bible versions:', mergedVersions);
-      }
-    });
-  }, []);
+  // Note: Current Bible API (bible-api.com) only supports World English Bible (WEB)
+  // For multiple translations, we'd need a different API or service
 
   // localStorage persistence
   useEffect(() => {
@@ -572,7 +526,7 @@ export default function PanelPage() {
   const loadChapter = async (book: BibleBook, chapter: number, verses?: { start?: number; end?: number }) => {
     setIsFetchingLyrics(true);
     try {
-      const chapterData = await fetchChapter(bibleVersion, book.id.toUpperCase(), chapter);
+      const chapterData = await fetchChapter(book.name, chapter);
       if (chapterData && chapterData.verses) {
         let content = '';
         const startVerse = verses?.start || 1;
@@ -581,12 +535,16 @@ export default function PanelPage() {
         for (let i = startVerse - 1; i < Math.min(endVerse, chapterData.verses.length); i++) {
           const verse = chapterData.verses[i];
           if (verse) {
-            content += verse.text + ' ';
+            // Remove extra newlines and clean up text
+            content += verse.text.replace(/\n/g, ' ').trim() + ' ';
           }
         }
 
         setFetchedLyrics([content.trim()]);
         setLineCursor(0);
+      } else {
+        console.warn('No verses found in chapter data:', chapterData);
+        setFetchedLyrics([]);
       }
     } catch (error) {
       console.error('Failed to load chapter:', error);
@@ -910,7 +868,7 @@ export default function PanelPage() {
                 {settingsTab === "bible" && (
                   <div className="space-y-4">
                     <Card><CardHeader><CardTitle className="text-sm">Bible Settings</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <Select value={bibleVersion} onValueChange={(v) => setBibleVersion(v || "kjv")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{BIBLE_VERSIONS.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
+                      <Select value={bibleVersion} onValueChange={(v) => setBibleVersion(v || "web")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{BIBLE_VERSIONS.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
                       <div className="flex items-center justify-between"><Label>Dual Bible</Label><Switch checked={dualBibleEnabled} onCheckedChange={setDualBibleEnabled} /></div>
                       {dualBibleEnabled && <div className="grid grid-cols-2 gap-4">
                         <Select value={dualPrimaryVersion} onValueChange={(v) => setDualPrimaryVersion(v || "kjv")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{BIBLE_VERSIONS.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
@@ -1064,7 +1022,7 @@ export default function PanelPage() {
             <label htmlFor="auto-advance" className="cursor-pointer">Auto Advance</label>
           </div>
           <Separator orientation="vertical" className="h-4" />
-          <Select value={bibleVersion} onValueChange={(v) => setBibleVersion(v || "kjv")}>
+          <Select value={bibleVersion} onValueChange={(v) => setBibleVersion(v || "web")}>
             <SelectTrigger className="h-6 text-xs w-32"><SelectValue /></SelectTrigger>
             <SelectContent>
               {BIBLE_VERSIONS.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
