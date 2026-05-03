@@ -54,7 +54,7 @@ const LOCAL_HTTP_PORT = 5510;
 const LOCAL_RELAY_PORT = 5511;
 
 function resolveAppFile(name: string): string {
-  return path.join(__dirname, '..', name);
+  return path.join(__dirname, '..', '..', name);
 }
 
 function getContentType(filePath: string): string {
