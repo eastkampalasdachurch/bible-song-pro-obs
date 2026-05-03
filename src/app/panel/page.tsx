@@ -201,7 +201,7 @@ const BIBLE_VERSIONS = [
   { id: "nlt", name: "New Living Translation (NLT)" },
 ];
 
-type ToolbarTab = "bible" | "songs" | "scenes" | "media" | "audio" | "schedule" | "host" | "annotate" | "settings";
+type ToolbarTab = "bible" | "songs" | "scenes" | "media" | "audio" | "schedule" | "host" | "annotate";
 
 export default function PanelPage() {
   const [activeTab, setActiveTab] = useState<ToolbarTab>("bible");
@@ -337,6 +337,9 @@ export default function PanelPage() {
 
   // Editor mode
   const [editorMode, setEditorMode] = useState<"text" | "buttons">("buttons");
+  const [animationPreset, setAnimationPreset] = useState("none");
+  const [showAnimationModal, setShowAnimationModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // Dual Bible
   const [dualBibleEnabled, setDualBibleEnabled] = useState(false);
@@ -544,6 +547,230 @@ export default function PanelPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
+      {showAnimationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowAnimationModal(false)}>
+          <div className="bg-card border rounded-lg shadow-lg w-full max-w-md p-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Animation Presets</h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowAnimationModal(false)}><X className="h-4 w-4" /></Button>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {["none", "fade", "slide-left", "slide-right", "pop", "zoom", "blur", "roll"].map((preset) => (
+                <Button key={preset} variant={animationPreset === preset ? "secondary" : "outline"} className="h-20 capitalize" onClick={() => setAnimationPreset(preset)}>{preset.replace("-", " ")}</Button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {showSettingsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowSettingsModal(false)}>
+          <div className="bg-card border rounded-lg shadow-lg w-[800px] max-h-[80vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold">Settings</h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowSettingsModal(false)}><X className="h-4 w-4" /></Button>
+            </div>
+             <div className="flex flex-1 overflow-hidden">
+               <div className="w-56 border-r border-border bg-card p-2 space-y-1">
+                 <button onClick={() => setSettingsTab("fullscreen")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "fullscreen" ? "bg-secondary" : "hover:bg-accent/50"}`}><Maximize2 className="h-4 w-4" /> Full Screen</button>
+                 <button onClick={() => setSettingsTab("lowerthird")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "lowerthird" ? "bg-secondary" : "hover:bg-accent/50"}`}><LayersIcon className="h-4 w-4" /> Lower Third</button>
+                 <button onClick={() => setSettingsTab("typography")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "typography" ? "bg-secondary" : "hover:bg-accent/50"}`}><Type className="h-4 w-4" /> Typography</button>
+                 <button onClick={() => setSettingsTab("background")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "background" ? "bg-secondary" : "hover:bg-accent/50"}`}><Image className="h-4 w-4" /> Background</button>
+                 <button onClick={() => setSettingsTab("songs")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "songs" ? "bg-secondary" : "hover:bg-accent/50"}`}><Music className="h-4 w-4" /> Songs</button>
+                 <button onClick={() => setSettingsTab("bible")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "bible" ? "bg-secondary" : "hover:bg-accent/50"}`}><Book className="h-4 w-4" /> Bible</button>
+                 <button onClick={() => setSettingsTab("display")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "display" ? "bg-secondary" : "hover:bg-accent/50"}`}><Monitor className="h-4 w-4" /> Display</button>
+                 <button onClick={() => setSettingsTab("animation")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "animation" ? "bg-secondary" : "hover:bg-accent/50"}`}><FlipHorizontal className="h-4 w-4" /> Animation</button>
+                 <button onClick={() => setSettingsTab("recording")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "recording" ? "bg-secondary" : "hover:bg-accent/50"}`}><Circle className="h-4 w-4" /> Recording</button>
+                 <button onClick={() => setSettingsTab("streaming")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "streaming" ? "bg-secondary" : "hover:bg-accent/50"}`}><Radio className="h-4 w-4" /> Streaming</button>
+                 <button onClick={() => setSettingsTab("remote")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "remote" ? "bg-secondary" : "hover:bg-accent/50"}`}><Wifi className="h-4 w-4" /> Remote</button>
+                 <button onClick={() => setSettingsTab("theme")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "theme" ? "bg-secondary" : "hover:bg-accent/50"}`}><Palette className="h-4 w-4" /> Theme</button>
+               </div>
+              <div className="flex-1 overflow-auto p-4">
+                {settingsTab === "fullscreen" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm">Full Screen Mode</CardTitle></CardHeader><CardContent className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2"><Label>Font Size: {fsFontSize}pt</Label><Slider value={[fsFontSize]} onValueChange={(v) => setFsFontSize(Array.isArray(v) ? v[0] : v)} min={12} max={120} step={1} /></div>
+                      <div className="space-y-2"><Label>Line Height: {fsLineHeight}</Label><Slider value={fsLineHeight * 50} onValueChange={(v) => setFsLineHeight((Array.isArray(v) ? v[0] : v) / 50)} min={80} max={200} step={5} /></div>
+                      <div className="space-y-2"><Label>Word Spacing: {fsWordSpacing}px</Label><Slider value={[fsWordSpacing + 10]} onValueChange={(v) => setFsWordSpacing((Array.isArray(v) ? v[0] : v) - 10)} min={0} max={20} step={1} /></div>
+                      <div className="space-y-2"><Label>Letter Spacing: {fsLetterSpacing}px</Label><Slider value={[fsLetterSpacing + 5]} onValueChange={(v) => setFsLetterSpacing((Array.isArray(v) ? v[0] : v) - 5)} min={0} max={10} step={1} /></div>
+                      <div className="space-y-2"><Label>Padding LR: {fsPaddingLR}%</Label><Slider value={[fsPaddingLR]} onValueChange={(v) => setFsPaddingLR(Array.isArray(v) ? v[0] : v)} min={0} max={30} step={1} /></div>
+                      <div className="space-y-2"><Label>Padding TB: {fsPaddingTB}%</Label><Slider value={[fsPaddingTB]} onValueChange={(v) => setFsPaddingTB(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
+                      <div className="space-y-2"><Label>Text X: {fsTextX}px</Label><Slider value={[fsTextX + 50]} onValueChange={(v) => setFsTextX((Array.isArray(v) ? v[0] : v) - 50)} min={0} max={100} step={1} /></div>
+                      <div className="space-y-2"><Label>Text Y: {fsTextY}px</Label><Slider value={[fsTextY + 50]} onValueChange={(v) => setFsTextY((Array.isArray(v) ? v[0] : v) - 50)} min={0} max={100} step={1} /></div>
+                      <div className="space-y-2"><Label>Width: {fsWidthPct}%</Label><Slider value={[fsWidthPct]} onValueChange={(v) => setFsWidthPct(Array.isArray(v) ? v[0] : v)} min={30} max={100} step={1} /></div>
+                      <div className="space-y-2"><Label>Scale: {fsScalePct}%</Label><Slider value={[fsScalePct]} onValueChange={(v) => setFsScalePct(Array.isArray(v) ? v[0] : v)} min={30} max={150} step={5} /></div>
+                      <div className="space-y-2"><Label>Border Radius: {fsBorderRadius}px</Label><Slider value={[fsBorderRadius]} onValueChange={(v) => setFsBorderRadius(Array.isArray(v) ? v[0] : v)} min={0} max={50} step={1} /></div>
+                      <div className="space-y-2"><Label>Shadow Opacity: {fsShadowOpacity}%</Label><Slider value={[fsShadowOpacity]} onValueChange={(v) => setFsShadowOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
+                      <div className="space-y-2"><Label>Shadow Blur: {fsShadowBlur}px</Label><Slider value={[fsShadowBlur]} onValueChange={(v) => setFsShadowBlur(Array.isArray(v) ? v[0] : v)} min={0} max={25} step={1} /></div>
+                      <div className="space-y-2"><Label>Shadow Offset: {fsShadowOffset}px</Label><Slider value={[fsShadowOffset]} onValueChange={(v) => setFsShadowOffset(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
+                      <div className="space-y-2"><Label>Background Opacity: {fsBgOpacity}%</Label><Slider value={[fsBgOpacity]} onValueChange={(v) => setFsBgOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Reference: {fsRefFontSize}pt</CardTitle></CardHeader><CardContent><Slider value={[fsRefFontSize]} onValueChange={(v) => setFsRefFontSize(Array.isArray(v) ? v[0] : v)} min={10} max={72} step={1} /></CardContent></Card>
+                  </div>
+                )}
+
+                {settingsTab === "lowerthird" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm">Lower Third Mode</CardTitle></CardHeader><CardContent className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2"><Label>Font Size: {ltFontSize}pt</Label><Slider value={[ltFontSize]} onValueChange={(v) => setLtFontSize(Array.isArray(v) ? v[0] : v)} min={12} max={72} step={1} /></div>
+                      <div className="space-y-2"><Label>Line Height: {ltLineHeight}</Label><Slider value={ltLineHeight * 50} onValueChange={(v) => setLtLineHeight((Array.isArray(v) ? v[0] : v) / 50)} min={80} max={180} step={5} /></div>
+                      <div className="space-y-2"><Label>Word Spacing: {ltWordSpacing}px</Label><Slider value={[ltWordSpacing + 5]} onValueChange={(v) => setLtWordSpacing((Array.isArray(v) ? v[0] : v) - 5)} min={0} max={10} step={1} /></div>
+                      <div className="space-y-2"><Label>Letter Spacing: {ltLetterSpacing}px</Label><Slider value={[ltLetterSpacing + 2]} onValueChange={(v) => setLtLetterSpacing((Array.isArray(v) ? v[0] : v) - 2)} min={0} max={5} step={1} /></div>
+                      <div className="space-y-2"><Label>Padding LR: {ltPaddingLR}%</Label><Slider value={[ltPaddingLR]} onValueChange={(v) => setLtPaddingLR(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
+                      <div className="space-y-2"><Label>Padding TB: {ltPaddingTB}%</Label><Slider value={[ltPaddingTB]} onValueChange={(v) => setLtPaddingTB(Array.isArray(v) ? v[0] : v)} min={0} max={15} step={1} /></div>
+                      <div className="space-y-2"><Label>Width: {ltWidthPct}%</Label><Slider value={[ltWidthPct]} onValueChange={(v) => setLtWidthPct(Array.isArray(v) ? v[0] : v)} min={30} max={100} step={1} /></div>
+                      <div className="space-y-2"><Label>Scale: {ltScalePct}%</Label><Slider value={[ltScalePct]} onValueChange={(v) => setLtScalePct(Array.isArray(v) ? v[0] : v)} min={30} max={120} step={5} /></div>
+                      <div className="space-y-2"><Label>Border Radius: {ltBorderRadius}px</Label><Slider value={[ltBorderRadius]} onValueChange={(v) => setLtBorderRadius(Array.isArray(v) ? v[0] : v)} min={0} max={30} step={1} /></div>
+                      <div className="space-y-2"><Label>Shadow Opacity: {ltShadowOpacity}%</Label><Slider value={[ltShadowOpacity]} onValueChange={(v) => setLtShadowOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
+                      <div className="space-y-2"><Label>Shadow Blur: {ltShadowBlur}px</Label><Slider value={[ltShadowBlur]} onValueChange={(v) => setLtShadowBlur(Array.isArray(v) ? v[0] : v)} min={0} max={25} step={1} /></div>
+                      <div className="space-y-2"><Label>Shadow Offset: {ltShadowOffset}px</Label><Slider value={[ltShadowOffset]} onValueChange={(v) => setLtShadowOffset(Array.isArray(v) ? v[0] : v)} min={0} max={15} step={1} /></div>
+                      <div className="space-y-2"><Label>Background Opacity: {ltBgOpacity}%</Label><Slider value={[ltBgOpacity]} onValueChange={(v) => setLtBgOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Reference: {ltRefFontSize}pt</CardTitle></CardHeader><CardContent><Slider value={[ltRefFontSize]} onValueChange={(v) => setLtRefFontSize(Array.isArray(v) ? v[0] : v)} min={8} max={36} step={1} /></CardContent></Card>
+                  </div>
+                )}
+
+                {settingsTab === "typography" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm">Typography</CardTitle></CardHeader><CardContent className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2"><Label>Font Size: {fontSize}pt</Label><Slider value={[fontSize]} onValueChange={(v) => setFontSize(Array.isArray(v) ? v[0] : v)} min={12} max={120} step={1} /></div>
+                      <div className="space-y-2"><Label>Line Spacing: {lineSpacing}</Label><Slider value={lineSpacing * 50} onValueChange={(v) => setLineSpacing((Array.isArray(v) ? v[0] : v) / 50)} min={80} max={200} step={5} /></div>
+                      <Select value={textTransform} onValueChange={(v) => setTextTransform(v as "none" | "uppercase")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Normal</SelectItem><SelectItem value="uppercase">Uppercase</SelectItem></SelectContent></Select>
+                      <Select value={hAlign} onValueChange={(v) => setHAlign(v as "left" | "center" | "right")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="left">Left</SelectItem><SelectItem value="center">Center</SelectItem><SelectItem value="right">Right</SelectItem></SelectContent></Select>
+                    </CardContent></Card>
+                  </div>
+                )}
+
+                {settingsTab === "background" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm">Background Type</CardTitle></CardHeader><CardContent className="space-y-4">
+                      <div className="flex gap-2"><Button variant={bgType === "solid" ? "secondary" : "outline"} onClick={() => setBgType("solid")}>Solid</Button><Button variant={bgType === "gradient" ? "secondary" : "outline"} onClick={() => setBgType("gradient")}>Gradient</Button><Button variant={bgType === "image" ? "secondary" : "outline"} onClick={() => setBgType("image")}>Image</Button><Button variant={bgType === "video" ? "secondary" : "outline"} onClick={() => setBgType("video")}>Video</Button></div>
+                      {bgType === "solid" && <div className="space-y-2"><Label>Color</Label><div className="flex gap-2"><Input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-16 h-10 p-1" /><Input value={bgColor} onChange={(e) => setBgColor(e.target.value)} /></div></div>}
+                      {bgType === "gradient" && <><div className="space-y-2"><Label>Angle: {bgGradientAngle}</Label><Slider value={bgGradientAngle} onValueChange={(v) => setBgGradientAngle(Array.isArray(v) ? v[0] : v)} min={0} max={360} step={5} /></div><div className="grid grid-cols-2 gap-4"><div className="space-y-2"><Label>Start</Label><Input type="color" value={bgGradientStart} onChange={(e) => setBgGradientStart(e.target.value)} className="w-full h-10 p-1" /></div><div className="space-y-2"><Label>End</Label><Input type="color" value={bgGradientEnd} onChange={(e) => setBgGradientEnd(e.target.value)} className="w-full h-10 p-1" /></div></div></>}
+                      {(bgType === "image" || bgType === "video") && <div className="space-y-2"><Label>URL</Label><Input placeholder="https://..." value={bgType === "image" ? bgImageUrl : bgVideoUrl} onChange={(e) => bgType === "image" ? setBgImageUrl(e.target.value) : setBgVideoUrl(e.target.value)} /></div>}
+                      {(bgType === "image" || bgType === "video") && <div className="space-y-2"><Label>Blur: {bgBlur}px</Label><Slider value={[bgBlur]} onValueChange={(v) => setBgBlur(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>}
+                      {bgType === "video" && <><div className="space-y-2"><Label>Opacity: {bgVideoOpacity}%</Label><Slider value={[bgVideoOpacity]} onValueChange={(v) => setBgVideoOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div><div className="space-y-2"><Label>Speed: {bgVideoSpeed}x</Label><Slider value={[bgVideoSpeed * 50]} onValueChange={(v) => setBgVideoSpeed((Array.isArray(v) ? v[0] : v) / 50)} min={25} max={200} step={5} /></div><div className="space-y-2"><Label>Y Offset: {bgY}</Label><Slider value={[bgY + 50]} onValueChange={(v) => setBgY((Array.isArray(v) ? v[0] : v) - 50)} min={-50} max={50} step={1} /></div></>}
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Quick Colors</CardTitle></CardHeader><CardContent><div className="flex flex-wrap gap-2">{quickColors.map((c, i) => <button key={i} className="w-8 h-8 rounded border" style={{backgroundColor: c}} onClick={() => setBgColor(c)} />)}</div></CardContent></Card>
+                  </div>
+                )}
+
+                {settingsTab === "songs" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm">Song Settings</CardTitle></CardHeader><CardContent className="space-y-4">
+                      <div className="space-y-2"><Label>Default Lines Per Page</Label><Slider value={[linesPerPage]} onValueChange={(v) => setLinesPerPage(Array.isArray(v) ? v[0] : v)} min={1} max={6} step={1} /></div>
+                      <div className="flex items-center justify-between"><Label>Auto Advance</Label><Switch checked={autoAdvance} onCheckedChange={setAutoAdvance} /></div>
+                      <div className="flex items-center justify-between"><Label>Auto Go Live</Label><Switch checked={autoGoLive} onCheckedChange={setAutoGoLive} /></div>
+                    </CardContent></Card>
+                  </div>
+                )}
+
+                {settingsTab === "bible" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm">Bible Settings</CardTitle></CardHeader><CardContent className="space-y-4">
+                      <Select value={bibleVersion} onValueChange={(v) => setBibleVersion(v || "kjv")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{BIBLE_VERSIONS.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
+                      <div className="flex items-center justify-between"><Label>Dual Bible</Label><Switch checked={dualBibleEnabled} onCheckedChange={setDualBibleEnabled} /></div>
+                      {dualBibleEnabled && <div className="grid grid-cols-2 gap-4">
+                        <Select value={dualPrimaryVersion} onValueChange={(v) => setDualPrimaryVersion(v || "kjv")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{BIBLE_VERSIONS.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
+                        <Select value={dualSecondaryVersion} onValueChange={(v) => setDualSecondaryVersion(v || "nlt")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{BIBLE_VERSIONS.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
+                      </div>}
+                    </CardContent></Card>
+                  </div>
+                )}
+
+                {settingsTab === "display" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm">Display Size</CardTitle></CardHeader><CardContent className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2"><Label>Width: {displayWidth}%</Label><Slider value={[displayWidth]} onValueChange={(v) => setDisplayWidth(Array.isArray(v) ? v[0] : v)} min={20} max={100} step={1} /></div>
+                      <div className="space-y-2"><Label>Scale: {displayScale}%</Label><Slider value={[displayScale]} onValueChange={(v) => setDisplayScale(Array.isArray(v) ? v[0] : v)} min={20} max={150} step={5} /></div>
+                      <div className="space-y-2"><Label>Radius: {displayRadius}px</Label><Slider value={[displayRadius]} onValueChange={(v) => setDisplayRadius(Array.isArray(v) ? v[0] : v)} min={0} max={50} step={1} /></div>
+                      <div className="flex items-center justify-between"><Label>Auto Height</Label><Switch checked={autoAdjustHeight} onCheckedChange={setAutoAdjustHeight} /></div>
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Position</CardTitle></CardHeader><CardContent className="grid grid-cols-2 gap-4">
+                      <Select value={displayAnchor} onValueChange={(v) => setDisplayAnchor(v as "top" | "bottom")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="top">Top</SelectItem><SelectItem value="bottom">Bottom</SelectItem></SelectContent></Select>
+                      <div className="space-y-2"><Label>Y Offset: {displayOffsetY}</Label><Slider value={[displayOffsetY + 50]} onValueChange={(v) => setDisplayOffsetY((Array.isArray(v) ? v[0] : v) - 50)} min={0} max={100} step={1} /></div>
+                    </CardContent></Card>
+                  </div>
+                )}
+
+                {settingsTab === "animation" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm">Transition</CardTitle></CardHeader><CardContent className="space-y-4">
+                      <Select value={transitionType} onValueChange={(v) => setTransitionType(v as "none" | "fade" | "slide" | "dissolve")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem><SelectItem value="fade">Fade</SelectItem><SelectItem value="slide">Slide</SelectItem><SelectItem value="dissolve">Dissolve</SelectItem></SelectContent></Select>
+                      <div className="space-y-2"><Label>Duration: {transitionDuration}s</Label><Slider value={transitionDuration * 100} onValueChange={(v) => setTransitionDuration((Array.isArray(v) ? v[0] : v) / 100)} min={25} max={200} step={5} /></div>
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Song Progress</CardTitle></CardHeader><CardContent className="space-y-4">
+                      <div className="space-y-2"><Label>Line Transition: {transitionDuration}s</Label><Slider value={transitionDuration * 100} onValueChange={(v) => setTransitionDuration((Array.isArray(v) ? v[0] : v) / 100)} min={0} max={200} step={5} /></div>
+                    </CardContent></Card>
+                  </div>
+                )}
+
+                {settingsTab === "streaming" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm flex items-center gap-2"><CircleDot className={`h-3 w-3 ${isStreaming ? "text-red-500" : ""}`} /> Streaming</CardTitle></CardHeader><CardContent className="space-y-4">
+                      <div className="flex items-center justify-between"><Label>Start Streaming</Label><Switch checked={isStreaming} onCheckedChange={setIsStreaming} /></div>
+                      {isStreaming && <div className="text-xs text-green-500 flex items-center gap-1"><CircleDot className="h-2 w-2" /> Live</div>}
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Stream Destinations</CardTitle></CardHeader><CardContent className="space-y-2">
+                      <div className="flex items-center gap-2 p-2 rounded border"><Checkbox /> <span className="text-sm">RTMP Server</span></div>
+                      <div className="flex items-center gap-2 p-2 rounded border"><Checkbox /> <span className="text-sm">YouTube Live</span></div>
+                      <div className="flex items-center gap-2 p-2 rounded border"><Checkbox /> <span className="text-sm">Twitch</span></div>
+                      <Button variant="outline" size="sm" className="w-full mt-2">Configure Destinations</Button>
+                    </CardContent></Card>
+                  </div>
+                )}
+
+                {settingsTab === "remote" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm flex items-center gap-2"><Wifi className="h-3 w-3" /> Remote Show</CardTitle></CardHeader><CardContent className="space-y-4">
+                      <div className="flex items-center justify-between"><Label>Enable Remote</Label><Switch checked={remoteShowEnabled} onCheckedChange={setRemoteShowEnabled} /></div>
+                      {remoteShowEnabled && <div className="space-y-2">
+                        <div className="text-xs text-muted-foreground">Share this code with your phone/remote device:</div>
+                        <div className="flex gap-2"><Input value={pairCode || "------"} readOnly className="font-mono text-center text-lg tracking-widest" /><Button variant="outline" size="icon" onClick={() => setPairCode(Math.random().toString(36).slice(2, 8).toUpperCase())}><RefreshCw className="h-4 w-4" /></Button></div>
+                      </div>}
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Connection</CardTitle></CardHeader><CardContent className="space-y-3">
+                      <div className="space-y-2"><Label>Server URL</Label><Input placeholder="localhost:8089" /></div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground"><Wifi className="h-3 w-3" /> Remote device connects via browser</div>
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Permissions</CardTitle></CardHeader><CardContent className="space-y-2">
+                      <div className="flex items-center gap-2"><Checkbox defaultChecked /> <span className="text-sm">Allow remote control</span></div>
+                      <div className="flex items-center gap-2"><Checkbox defaultChecked /> <span className="text-sm">Allow song requests</span></div>
+                      <div className="flex items-center gap-2"><Checkbox /> <span className="text-sm">Allow schedule editing</span></div>
+                    </CardContent></Card>
+                  </div>
+                )}
+
+                {settingsTab === "recording" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm flex items-center gap-2"><Circle className={`h-3 w-3 ${isRecording ? "text-red-500" : ""}`} /> Recording</CardTitle></CardHeader><CardContent className="space-y-4">
+                      <div className="flex items-center justify-between"><Label>Start Recording</Label><Switch checked={isRecording} onCheckedChange={setIsRecording} /></div>
+                      {isRecording && <div className="text-xs text-red-500 flex items-center gap-1"><Circle className="h-2 w-2 animate-pulse" /> Recording...</div>}
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Recording Format</CardTitle></CardHeader><CardContent className="space-y-3">
+                      <Select defaultValue="mp4"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="mp4">MP4 (H.264)</SelectItem><SelectItem value="mkv">MKV (FFV1)</SelectItem><SelectItem value="mov">MOV (ProRes)</SelectItem></SelectContent></Select>
+                      <div className="space-y-2"><Label>Quality</Label><Slider defaultValue={[80]} min={50} max={100} step={5} /><div className="flex justify-between text-xs text-muted-foreground"><span>Low</span><span>High</span></div></div>
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Output Folder</CardTitle></CardHeader><CardContent className="space-y-2">
+                      <div className="flex gap-2"><Input placeholder="Videos/Bible Song Pro" className="flex-1" /><Button variant="outline" size="icon"><FolderOpen className="h-4 w-4" /></Button></div>
+                      <Button variant="outline" size="sm" className="w-full">Open Recording Folder</Button>
+                    </CardContent></Card>
+                  </div>
+                )}
+
+                {settingsTab === "theme" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm">Appearance</CardTitle></CardHeader><CardContent className="space-y-4">
+                      <Select value={theme} onValueChange={(v) => setTheme(v || "dark")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="dark">Dark</SelectItem><SelectItem value="light">Light</SelectItem><SelectItem value="system">System</SelectItem></SelectContent></Select>
+                      <Select value={language} onValueChange={(v) => setLanguage(v || "en")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="en">English</SelectItem><SelectItem value="es">Spanish</SelectItem><SelectItem value="fr">French</SelectItem></SelectContent></Select>
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Keyboard Shortcuts</CardTitle></CardHeader><CardContent className="space-y-2 text-sm"><div className="flex justify-between"><span>Go Live</span><Badge variant="outline">Space</Badge></div><div className="flex justify-between"><span>Clear</span><Badge variant="outline">Esc</Badge></div><div className="flex justify-between"><span>Next</span><Badge variant="outline">PageDown</Badge></div><div className="flex justify-between"><span>Prev</span><Badge variant="outline">PageUp</Badge></div></CardContent></Card>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur">
         <div className="flex items-center justify-between px-4 py-2">
           <div className="flex items-center gap-3">
@@ -563,7 +790,6 @@ export default function PanelPage() {
               <TabsTrigger value="host" className="text-xs gap-1"><VideoIcon className="h-3 w-3" /> Host</TabsTrigger>
               <TabsTrigger value="annotate" className="text-xs gap-1"><Pen className="h-3 w-3" /> Annotate</TabsTrigger>
               <TabsTrigger value="schedule" className="text-xs gap-1"><ListMusic className="h-3 w-3" /> Schedule</TabsTrigger>
-              <TabsTrigger value="settings" className="text-xs gap-1"><Settings className="h-3 w-3" /> Settings</TabsTrigger>
             </TabsList>
           </Tabs>
           <div className="flex items-center gap-2">
@@ -573,12 +799,13 @@ export default function PanelPage() {
               <Button variant={editorMode === "buttons" ? "secondary" : "ghost"} size="sm" className="h-7 px-2 text-xs" onClick={() => setEditorMode("buttons")}>Buttons</Button>
             </div>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleImportSongs} title="Import songs"><Upload className="h-4 w-4" /></Button>
-            <Button variant="outline" size="sm" className="h-8 text-xs font-serif italic" title="Animation presets">fx</Button>
+            <Button variant="outline" size="sm" className="h-8 text-xs font-serif italic" title="Animation presets" onClick={() => setShowAnimationModal(true)}>fx</Button>
             <Button variant="outline" size="sm" onClick={handleClear}><X className="h-4 w-4 mr-1" /></Button>
             <Button variant={isLive ? "destructive" : "default"} size="sm" onClick={handleGoLive}>
               {isLive ? <SquareIcon className="h-4 w-4 mr-1" /> : <Play className="h-4 w-4 mr-1" />}
               {isLive ? "Live" : "Go Live"}
             </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowSettingsModal(true)}><Settings className="h-4 w-4 mr-1" /> Settings</Button>
           </div>
         </div>
         <div className="flex items-center gap-2 px-4 pb-2 text-xs border-t border-border/50">
@@ -752,196 +979,7 @@ export default function PanelPage() {
         )}
 
         <main className="flex-1 overflow-auto">
-          {activeTab === "settings" ? (
-            <div className="flex h-full">
-              <div className="w-56 border-r border-border bg-card flex flex-col">
-                <div className="p-3 border-b font-semibold flex items-center gap-2"><Settings className="h-4 w-4" /> Settings</div>
-                <ScrollArea className="flex-1">
-                  <div className="p-2 space-y-1">
-                    <button onClick={() => setSettingsTab("fullscreen")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "fullscreen" ? "bg-secondary" : "hover:bg-accent/50"}`}><Maximize2 className="h-4 w-4" /> Full Screen</button>
-                    <button onClick={() => setSettingsTab("lowerthird")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "lowerthird" ? "bg-secondary" : "hover:bg-accent/50"}`}><LayersIcon className="h-4 w-4" /> Lower Third</button>
-                    <button onClick={() => setSettingsTab("typography")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "typography" ? "bg-secondary" : "hover:bg-accent/50"}`}><Type className="h-4 w-4" /> Typography</button>
-                    <button onClick={() => setSettingsTab("background")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "background" ? "bg-secondary" : "hover:bg-accent/50"}`}><Image className="h-4 w-4" /> Background</button>
-                    <button onClick={() => setSettingsTab("songs")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "songs" ? "bg-secondary" : "hover:bg-accent/50"}`}><Music className="h-4 w-4" /> Songs</button>
-                    <button onClick={() => setSettingsTab("bible")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "bible" ? "bg-secondary" : "hover:bg-accent/50"}`}><Book className="h-4 w-4" /> Bible</button>
-                    <button onClick={() => setSettingsTab("display")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "display" ? "bg-secondary" : "hover:bg-accent/50"}`}><Monitor className="h-4 w-4" /> Display</button>
-                    <button onClick={() => setSettingsTab("animation")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "animation" ? "bg-secondary" : "hover:bg-accent/50"}`}><FlipHorizontal className="h-4 w-4" /> Animation</button>
-                    <button onClick={() => setSettingsTab("recording")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "recording" ? "bg-secondary" : "hover:bg-accent/50"}`}><Circle className="h-4 w-4" /> Recording</button>
-                    <button onClick={() => setSettingsTab("streaming")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "streaming" ? "bg-secondary" : "hover:bg-accent/50"}`}><Radio className="h-4 w-4" /> Streaming</button>
-                    <button onClick={() => setSettingsTab("remote")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "remote" ? "bg-secondary" : "hover:bg-accent/50"}`}><Wifi className="h-4 w-4" /> Remote</button>
-                    <button onClick={() => setSettingsTab("theme")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "theme" ? "bg-secondary" : "hover:bg-accent/50"}`}><Palette className="h-4 w-4" /> Theme</button>
-                  </div>
-                </ScrollArea>
-              </div>
 
-              <div className="flex-1 overflow-auto p-4">
-                {settingsTab === "fullscreen" && (
-                  <div className="space-y-4">
-                    <Card><CardHeader><CardTitle className="text-sm">Full Screen Mode</CardTitle></CardHeader><CardContent className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2"><Label>Font Size: {fsFontSize}pt</Label><Slider value={[fsFontSize]} onValueChange={(v) => setFsFontSize(Array.isArray(v) ? v[0] : v)} min={12} max={120} step={1} /></div>
-                      <div className="space-y-2"><Label>Line Height: {fsLineHeight}</Label><Slider value={fsLineHeight * 50} onValueChange={(v) => setFsLineHeight((Array.isArray(v) ? v[0] : v) / 50)} min={80} max={200} step={5} /></div>
-                      <div className="space-y-2"><Label>Word Spacing: {fsWordSpacing}px</Label><Slider value={[fsWordSpacing + 10]} onValueChange={(v) => setFsWordSpacing((Array.isArray(v) ? v[0] : v) - 10)} min={0} max={20} step={1} /></div>
-                      <div className="space-y-2"><Label>Letter Spacing: {fsLetterSpacing}px</Label><Slider value={[fsLetterSpacing + 5]} onValueChange={(v) => setFsLetterSpacing((Array.isArray(v) ? v[0] : v) - 5)} min={0} max={10} step={1} /></div>
-                      <div className="space-y-2"><Label>Padding LR: {fsPaddingLR}%</Label><Slider value={[fsPaddingLR]} onValueChange={(v) => setFsPaddingLR(Array.isArray(v) ? v[0] : v)} min={0} max={30} step={1} /></div>
-                      <div className="space-y-2"><Label>Padding TB: {fsPaddingTB}%</Label><Slider value={[fsPaddingTB]} onValueChange={(v) => setFsPaddingTB(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
-                      <div className="space-y-2"><Label>Text X: {fsTextX}px</Label><Slider value={[fsTextX + 50]} onValueChange={(v) => setFsTextX((Array.isArray(v) ? v[0] : v) - 50)} min={0} max={100} step={1} /></div>
-                      <div className="space-y-2"><Label>Text Y: {fsTextY}px</Label><Slider value={[fsTextY + 50]} onValueChange={(v) => setFsTextY((Array.isArray(v) ? v[0] : v) - 50)} min={0} max={100} step={1} /></div>
-                      <div className="space-y-2"><Label>Width: {fsWidthPct}%</Label><Slider value={[fsWidthPct]} onValueChange={(v) => setFsWidthPct(Array.isArray(v) ? v[0] : v)} min={30} max={100} step={1} /></div>
-                      <div className="space-y-2"><Label>Scale: {fsScalePct}%</Label><Slider value={[fsScalePct]} onValueChange={(v) => setFsScalePct(Array.isArray(v) ? v[0] : v)} min={30} max={150} step={5} /></div>
-                      <div className="space-y-2"><Label>Border Radius: {fsBorderRadius}px</Label><Slider value={[fsBorderRadius]} onValueChange={(v) => setFsBorderRadius(Array.isArray(v) ? v[0] : v)} min={0} max={50} step={1} /></div>
-                      <div className="space-y-2"><Label>Shadow Opacity: {fsShadowOpacity}%</Label><Slider value={[fsShadowOpacity]} onValueChange={(v) => setFsShadowOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
-                      <div className="space-y-2"><Label>Shadow Blur: {fsShadowBlur}px</Label><Slider value={[fsShadowBlur]} onValueChange={(v) => setFsShadowBlur(Array.isArray(v) ? v[0] : v)} min={0} max={25} step={1} /></div>
-                      <div className="space-y-2"><Label>Shadow Offset: {fsShadowOffset}px</Label><Slider value={[fsShadowOffset]} onValueChange={(v) => setFsShadowOffset(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
-                      <div className="space-y-2"><Label>Background Opacity: {fsBgOpacity}%</Label><Slider value={[fsBgOpacity]} onValueChange={(v) => setFsBgOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
-                    </CardContent></Card>
-                    <Card><CardHeader><CardTitle className="text-sm">Reference: {fsRefFontSize}pt</CardTitle></CardHeader><CardContent><Slider value={[fsRefFontSize]} onValueChange={(v) => setFsRefFontSize(Array.isArray(v) ? v[0] : v)} min={10} max={72} step={1} /></CardContent></Card>
-                  </div>
-                )}
-
-                {settingsTab === "lowerthird" && (
-                  <div className="space-y-4">
-                    <Card><CardHeader><CardTitle className="text-sm">Lower Third Mode</CardTitle></CardHeader><CardContent className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2"><Label>Font Size: {ltFontSize}pt</Label><Slider value={[ltFontSize]} onValueChange={(v) => setLtFontSize(Array.isArray(v) ? v[0] : v)} min={12} max={72} step={1} /></div>
-                      <div className="space-y-2"><Label>Line Height: {ltLineHeight}</Label><Slider value={ltLineHeight * 50} onValueChange={(v) => setLtLineHeight((Array.isArray(v) ? v[0] : v) / 50)} min={80} max={180} step={5} /></div>
-                      <div className="space-y-2"><Label>Word Spacing: {ltWordSpacing}px</Label><Slider value={[ltWordSpacing + 5]} onValueChange={(v) => setLtWordSpacing((Array.isArray(v) ? v[0] : v) - 5)} min={0} max={10} step={1} /></div>
-                      <div className="space-y-2"><Label>Letter Spacing: {ltLetterSpacing}px</Label><Slider value={[ltLetterSpacing + 2]} onValueChange={(v) => setLtLetterSpacing((Array.isArray(v) ? v[0] : v) - 2)} min={0} max={5} step={1} /></div>
-                      <div className="space-y-2"><Label>Padding LR: {ltPaddingLR}%</Label><Slider value={[ltPaddingLR]} onValueChange={(v) => setLtPaddingLR(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
-                      <div className="space-y-2"><Label>Padding TB: {ltPaddingTB}%</Label><Slider value={[ltPaddingTB]} onValueChange={(v) => setLtPaddingTB(Array.isArray(v) ? v[0] : v)} min={0} max={15} step={1} /></div>
-                      <div className="space-y-2"><Label>Width: {ltWidthPct}%</Label><Slider value={[ltWidthPct]} onValueChange={(v) => setLtWidthPct(Array.isArray(v) ? v[0] : v)} min={30} max={100} step={1} /></div>
-                      <div className="space-y-2"><Label>Scale: {ltScalePct}%</Label><Slider value={[ltScalePct]} onValueChange={(v) => setLtScalePct(Array.isArray(v) ? v[0] : v)} min={30} max={120} step={5} /></div>
-                      <div className="space-y-2"><Label>Border Radius: {ltBorderRadius}px</Label><Slider value={[ltBorderRadius]} onValueChange={(v) => setLtBorderRadius(Array.isArray(v) ? v[0] : v)} min={0} max={30} step={1} /></div>
-                      <div className="space-y-2"><Label>Shadow Opacity: {ltShadowOpacity}%</Label><Slider value={[ltShadowOpacity]} onValueChange={(v) => setLtShadowOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
-                      <div className="space-y-2"><Label>Shadow Blur: {ltShadowBlur}px</Label><Slider value={[ltShadowBlur]} onValueChange={(v) => setLtShadowBlur(Array.isArray(v) ? v[0] : v)} min={0} max={25} step={1} /></div>
-                      <div className="space-y-2"><Label>Shadow Offset: {ltShadowOffset}px</Label><Slider value={[ltShadowOffset]} onValueChange={(v) => setLtShadowOffset(Array.isArray(v) ? v[0] : v)} min={0} max={15} step={1} /></div>
-                      <div className="space-y-2"><Label>Background Opacity: {ltBgOpacity}%</Label><Slider value={[ltBgOpacity]} onValueChange={(v) => setLtBgOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
-                    </CardContent></Card>
-                    <Card><CardHeader><CardTitle className="text-sm">Reference: {ltRefFontSize}pt</CardTitle></CardHeader><CardContent><Slider value={[ltRefFontSize]} onValueChange={(v) => setLtRefFontSize(Array.isArray(v) ? v[0] : v)} min={8} max={36} step={1} /></CardContent></Card>
-                  </div>
-                )}
-
-                {settingsTab === "background" && (
-                  <div className="space-y-4">
-                    <Card><CardHeader><CardTitle className="text-sm">Background Type</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <div className="flex gap-2"><Button variant={bgType === "solid" ? "secondary" : "outline"} onClick={() => setBgType("solid")}>Solid</Button><Button variant={bgType === "gradient" ? "secondary" : "outline"} onClick={() => setBgType("gradient")}>Gradient</Button><Button variant={bgType === "image" ? "secondary" : "outline"} onClick={() => setBgType("image")}>Image</Button><Button variant={bgType === "video" ? "secondary" : "outline"} onClick={() => setBgType("video")}>Video</Button></div>
-                      {bgType === "solid" && <div className="space-y-2"><Label>Color</Label><div className="flex gap-2"><Input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-16 h-10 p-1" /><Input value={bgColor} onChange={(e) => setBgColor(e.target.value)} /></div></div>}
-                      {bgType === "gradient" && <><div className="space-y-2"><Label>Angle: {bgGradientAngle}</Label><Slider value={bgGradientAngle} onValueChange={(v) => setBgGradientAngle(Array.isArray(v) ? v[0] : v)} min={0} max={360} step={5} /></div><div className="grid grid-cols-2 gap-4"><div className="space-y-2"><Label>Start</Label><Input type="color" value={bgGradientStart} onChange={(e) => setBgGradientStart(e.target.value)} className="w-full h-10 p-1" /></div><div className="space-y-2"><Label>End</Label><Input type="color" value={bgGradientEnd} onChange={(e) => setBgGradientEnd(e.target.value)} className="w-full h-10 p-1" /></div></div></>}
-                      {(bgType === "image" || bgType === "video") && <div className="space-y-2"><Label>URL</Label><Input placeholder="https://..." value={bgType === "image" ? bgImageUrl : bgVideoUrl} onChange={(e) => bgType === "image" ? setBgImageUrl(e.target.value) : setBgVideoUrl(e.target.value)} /></div>}
-                      {(bgType === "image" || bgType === "video") && <div className="space-y-2"><Label>Blur: {bgBlur}px</Label><Slider value={[bgBlur]} onValueChange={(v) => setBgBlur(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>}
-                      {bgType === "video" && <><div className="space-y-2"><Label>Opacity: {bgVideoOpacity}%</Label><Slider value={[bgVideoOpacity]} onValueChange={(v) => setBgVideoOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div><div className="space-y-2"><Label>Speed: {bgVideoSpeed}x</Label><Slider value={[bgVideoSpeed * 50]} onValueChange={(v) => setBgVideoSpeed((Array.isArray(v) ? v[0] : v) / 50)} min={25} max={200} step={5} /></div><div className="space-y-2"><Label>Y Offset: {bgY}</Label><Slider value={[bgY + 50]} onValueChange={(v) => setBgY((Array.isArray(v) ? v[0] : v) - 50)} min={-50} max={50} step={1} /></div></>}
-                    </CardContent></Card>
-                    <Card><CardHeader><CardTitle className="text-sm">Quick Colors</CardTitle></CardHeader><CardContent><div className="flex flex-wrap gap-2">{quickColors.map((c, i) => <button key={i} className="w-8 h-8 rounded border" style={{backgroundColor: c}} onClick={() => setBgColor(c)} />)}</div></CardContent></Card>
-                  </div>
-                )}
-
-                {settingsTab === "display" && (
-                  <div className="space-y-4">
-                    <Card><CardHeader><CardTitle className="text-sm">Display Size</CardTitle></CardHeader><CardContent className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2"><Label>Width: {displayWidth}%</Label><Slider value={[displayWidth]} onValueChange={(v) => setDisplayWidth(Array.isArray(v) ? v[0] : v)} min={20} max={100} step={1} /></div>
-                      <div className="space-y-2"><Label>Scale: {displayScale}%</Label><Slider value={[displayScale]} onValueChange={(v) => setDisplayScale(Array.isArray(v) ? v[0] : v)} min={20} max={150} step={5} /></div>
-                      <div className="space-y-2"><Label>Radius: {displayRadius}px</Label><Slider value={[displayRadius]} onValueChange={(v) => setDisplayRadius(Array.isArray(v) ? v[0] : v)} min={0} max={50} step={1} /></div>
-                      <div className="flex items-center justify-between"><Label>Auto Height</Label><Switch checked={autoAdjustHeight} onCheckedChange={setAutoAdjustHeight} /></div>
-                    </CardContent></Card>
-                    <Card><CardHeader><CardTitle className="text-sm">Position</CardTitle></CardHeader><CardContent className="grid grid-cols-2 gap-4">
-                      <Select value={displayAnchor} onValueChange={(v) => setDisplayAnchor(v as "top" | "bottom")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="top">Top</SelectItem><SelectItem value="bottom">Bottom</SelectItem></SelectContent></Select>
-                      <div className="space-y-2"><Label>Y Offset: {displayOffsetY}</Label><Slider value={[displayOffsetY + 50]} onValueChange={(v) => setDisplayOffsetY((Array.isArray(v) ? v[0] : v) - 50)} min={0} max={100} step={1} /></div>
-                    </CardContent></Card>
-                  </div>
-                )}
-
-                {settingsTab === "reference" && (
-                  <div className="space-y-4">
-                    <Card><CardHeader><CardTitle className="text-sm">Reference Display</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <div className="flex items-center justify-between"><Label>Show Reference</Label><Switch checked={showRef} onCheckedChange={setShowRef} /></div>
-                      {showRef && <div className="grid grid-cols-3 gap-4">
-                        <div className="space-y-2"><Label>Font: {refFontSize}pt</Label><Slider value={[refFontSize]} onValueChange={(v) => setRefFontSize(Array.isArray(v) ? v[0] : v)} min={10} max={48} step={1} /></div>
-                        <div className="space-y-2"><Label>Line: {refLineHeight}</Label><Slider value={refLineHeight * 50} onValueChange={(v) => setRefLineHeight((Array.isArray(v) ? v[0] : v) / 50)} min={80} max={180} step={5} /></div>
-                        <div className="space-y-2"><Label>Opacity: {refOpacity}%</Label><Slider value={[refOpacity]} onValueChange={(v) => setRefOpacity(Array.isArray(v) ? v[0] : v)} min={20} max={100} step={5} /></div>
-                        <div className="space-y-2"><Label>Word Spacing: {refWordSpacing}px</Label><Slider value={[refWordSpacing + 5]} onValueChange={(v) => setRefWordSpacing((Array.isArray(v) ? v[0] : v) - 5)} min={0} max={10} step={1} /></div>
-                        <div className="space-y-2"><Label>Letter Spacing: {refLetterSpacing}px</Label><Slider value={[refLetterSpacing + 2]} onValueChange={(v) => setRefLetterSpacing((Array.isArray(v) ? v[0] : v) - 2)} min={0} max={5} step={1} /></div>
-                        <div className="space-y-2"><Label>Border Width: {refBorderWidth}px</Label><Slider value={[refBorderWidth]} onValueChange={(v) => setRefBorderWidth(Array.isArray(v) ? v[0] : v)} min={0} max={10} step={1} /></div>
-                        <div className="space-y-2"><Label>Border Radius: {refBorderRadius}px</Label><Slider value={[refBorderRadius]} onValueChange={(v) => setRefBorderRadius(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
-                      </div>}
-                    </CardContent></Card>
-                  </div>
-                )}
-
-                {settingsTab === "animation" && (
-                  <div className="space-y-4">
-                    <Card><CardHeader><CardTitle className="text-sm">Transition</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <Select value={transitionType} onValueChange={(v) => setTransitionType(v as "none" | "fade" | "slide" | "dissolve")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem><SelectItem value="fade">Fade</SelectItem><SelectItem value="slide">Slide</SelectItem><SelectItem value="dissolve">Dissolve</SelectItem></SelectContent></Select>
-                      <div className="space-y-2"><Label>Duration: {transitionDuration}s</Label><Slider value={transitionDuration * 100} onValueChange={(v) => setTransitionDuration((Array.isArray(v) ? v[0] : v) / 100)} min={25} max={200} step={5} /></div>
-                    </CardContent></Card>
-                    <Card><CardHeader><CardTitle className="text-sm">Song Progress</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <div className="space-y-2"><Label>Line Transition: {transitionDuration}s</Label><Slider value={transitionDuration * 100} onValueChange={(v) => setTransitionDuration((Array.isArray(v) ? v[0] : v) / 100)} min={0} max={200} step={5} /></div>
-                    </CardContent></Card>
-                  </div>
-                )}
-
-                {settingsTab === "streaming" && (
-                  <div className="space-y-4">
-                    <Card><CardHeader><CardTitle className="text-sm flex items-center gap-2"><CircleDot className={`h-3 w-3 ${isStreaming ? "text-red-500" : ""}`} /> Streaming</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <div className="flex items-center justify-between"><Label>Start Streaming</Label><Switch checked={isStreaming} onCheckedChange={setIsStreaming} /></div>
-                      {isStreaming && <div className="text-xs text-green-500 flex items-center gap-1"><CircleDot className="h-2 w-2" /> Live</div>}
-                    </CardContent></Card>
-                    <Card><CardHeader><CardTitle className="text-sm">Stream Destinations</CardTitle></CardHeader><CardContent className="space-y-2">
-                      <div className="flex items-center gap-2 p-2 rounded border"><Checkbox /> <span className="text-sm">RTMP Server</span></div>
-                      <div className="flex items-center gap-2 p-2 rounded border"><Checkbox /> <span className="text-sm">YouTube Live</span></div>
-                      <div className="flex items-center gap-2 p-2 rounded border"><Checkbox /> <span className="text-sm">Twitch</span></div>
-                      <Button variant="outline" size="sm" className="w-full mt-2">Configure Destinations</Button>
-                    </CardContent></Card>
-                  </div>
-                )}
-
-                {settingsTab === "remote" && (
-                  <div className="space-y-4">
-                    <Card><CardHeader><CardTitle className="text-sm flex items-center gap-2"><Wifi className="h-3 w-3" /> Remote Show</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <div className="flex items-center justify-between"><Label>Enable Remote</Label><Switch checked={remoteShowEnabled} onCheckedChange={setRemoteShowEnabled} /></div>
-                      {remoteShowEnabled && <div className="space-y-2">
-                        <div className="text-xs text-muted-foreground">Share this code with your phone/remote device:</div>
-                        <div className="flex gap-2"><Input value={pairCode || "------"} readOnly className="font-mono text-center text-lg tracking-widest" /><Button variant="outline" size="icon" onClick={() => setPairCode(Math.random().toString(36).slice(2, 8).toUpperCase())}><RefreshCw className="h-4 w-4" /></Button></div>
-                      </div>}
-                    </CardContent></Card>
-                    <Card><CardHeader><CardTitle className="text-sm">Connection</CardTitle></CardHeader><CardContent className="space-y-3">
-                      <div className="space-y-2"><Label>Server URL</Label><Input placeholder="localhost:8089" /></div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground"><Wifi className="h-3 w-3" /> Remote device connects via browser</div>
-                    </CardContent></Card>
-                    <Card><CardHeader><CardTitle className="text-sm">Permissions</CardTitle></CardHeader><CardContent className="space-y-2">
-                      <div className="flex items-center gap-2"><Checkbox defaultChecked /> <span className="text-sm">Allow remote control</span></div>
-                      <div className="flex items-center gap-2"><Checkbox defaultChecked /> <span className="text-sm">Allow song requests</span></div>
-                      <div className="flex items-center gap-2"><Checkbox /> <span className="text-sm">Allow schedule editing</span></div>
-                    </CardContent></Card>
-                  </div>
-                )}
-
-                {settingsTab === "recording" && (
-                  <div className="space-y-4">
-                    <Card><CardHeader><CardTitle className="text-sm flex items-center gap-2"><Circle className={`h-3 w-3 ${isRecording ? "text-red-500" : ""}`} /> Recording</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <div className="flex items-center justify-between"><Label>Start Recording</Label><Switch checked={isRecording} onCheckedChange={setIsRecording} /></div>
-                      {isRecording && <div className="text-xs text-red-500 flex items-center gap-1"><Circle className="h-2 w-2 animate-pulse" /> Recording...</div>}
-                    </CardContent></Card>
-                    <Card><CardHeader><CardTitle className="text-sm">Recording Format</CardTitle></CardHeader><CardContent className="space-y-3">
-                      <Select defaultValue="mp4"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="mp4">MP4 (H.264)</SelectItem><SelectItem value="mkv">MKV (FFV1)</SelectItem><SelectItem value="mov">MOV (ProRes)</SelectItem></SelectContent></Select>
-                      <div className="space-y-2"><Label>Quality</Label><Slider defaultValue={[80]} min={50} max={100} step={5} /><div className="flex justify-between text-xs text-muted-foreground"><span>Low</span><span>High</span></div></div>
-                    </CardContent></Card>
-                    <Card><CardHeader><CardTitle className="text-sm">Output Folder</CardTitle></CardHeader><CardContent className="space-y-2">
-                      <div className="flex gap-2"><Input placeholder="Videos/Bible Song Pro" className="flex-1" /><Button variant="outline" size="icon"><FolderOpen className="h-4 w-4" /></Button></div>
-                      <Button variant="outline" size="sm" className="w-full">Open Recording Folder</Button>
-                    </CardContent></Card>
-                  </div>
-                )}
-
-                {settingsTab === "theme" && (
-                  <div className="space-y-4">
-                    <Card><CardHeader><CardTitle className="text-sm">Appearance</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <Select value={theme} onValueChange={(v) => setTheme(v || "dark")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="dark">Dark</SelectItem><SelectItem value="light">Light</SelectItem><SelectItem value="system">System</SelectItem></SelectContent></Select>
-                      <Select value={language} onValueChange={(v) => setLanguage(v || "en")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="en">English</SelectItem><SelectItem value="es">Spanish</SelectItem><SelectItem value="fr">French</SelectItem></SelectContent></Select>
-                    </CardContent></Card>
-                    <Card><CardHeader><CardTitle className="text-sm">Keyboard Shortcuts</CardTitle></CardHeader><CardContent className="space-y-2 text-sm"><div className="flex justify-between"><span>Go Live</span><Badge variant="outline">Space</Badge></div><div className="flex justify-between"><span>Clear</span><Badge variant="outline">Esc</Badge></div><div className="flex justify-between"><span>Next</span><Badge variant="outline">PageDown</Badge></div><div className="flex justify-between"><span>Prev</span><Badge variant="outline">PageUp</Badge></div></CardContent></Card>
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
             <div className="p-4 space-y-4">
               {activeTab === "songs" && selectedSong && (
                 <>
@@ -1087,7 +1125,6 @@ export default function PanelPage() {
                 </CardContent>
               </Card>
             </div>
-          )}
         </main>
       </div>
     </div>
