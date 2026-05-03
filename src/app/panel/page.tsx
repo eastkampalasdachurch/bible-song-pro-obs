@@ -622,12 +622,9 @@ export default function PanelPage() {
         // Parse the complex content structure from bible.helloao.org
         const chapterVerses = chapterData.chapter.content.filter((item: any) => item.type === 'verse');
 
-        console.log(`Filtering verses (helloao.org): start=${startVerse}, end=${endVerse}, total verses=${chapterVerses.length}`);
-
         for (let i = startVerse - 1; i < Math.min(endVerse, chapterVerses.length); i++) {
           const verse = chapterVerses[i];
           if (verse && verse.content) {
-            console.log(`Adding verse ${verse.number}: ${JSON.stringify(verse.content).substring(0, 100)}...`);
             // Extract text from verse content array
             let verseText = '';
             if (Array.isArray(verse.content)) {
@@ -653,12 +650,9 @@ export default function PanelPage() {
         const startVerse = verses?.start || 1;
         const endVerse = verses?.end || (verses?.start ? verses.start : chapterData.verses.length);
 
-        console.log(`Filtering verses: start=${startVerse}, end=${endVerse}, total verses=${chapterData.verses.length}`);
-
         for (let i = startVerse - 1; i < Math.min(endVerse, chapterData.verses.length); i++) {
           const verse = chapterData.verses[i];
           if (verse && verse.text) {
-            console.log(`Adding verse ${verse.verse}: ${verse.text.substring(0, 50)}...`);
             content += verse.text.replace(/\n/g, ' ').trim() + ' ';
           }
         }
