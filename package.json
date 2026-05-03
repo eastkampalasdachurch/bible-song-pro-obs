@@ -2,28 +2,27 @@
   "name": "sda-bible-song-pro",
   "version": "0.1.0",
   "private": true,
+  "main": "dist/electron/main.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:electron": "tsc -p tsconfig.electron.json",
     "start": "next start",
     "lint": "eslint",
-    "electron:dev": "powershell -File scripts/build-electron.ps1 -dev",
-    "electron:build": "powershell -File scripts/build-electron.ps1",
-    "electron:start": "npx electron ."
+    "electron:dev": "bun run build && bun run build:electron && bun run dev &",
+    "electron:start": "bun run build:electron && npx electron .",
+    "electron:build": "bun run build && bun run build:electron && npx electron-builder --win portable"
   },
   "build": {
     "appId": "com.eastkampalasdachurch.sda-bible-song-pro",
     "productName": "SDA Bible Song Pro",
     "files": [
-      "src/electron/**/*",
+      "dist/electron/**/*",
       "src/server/**/*",
       ".next/static/**/*",
       ".next/server/**/*",
       "package.json"
-    ],
-    "extraMetadata": {
-      "main": ".next/server/app.js"
-    }
+    ]
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -44,6 +43,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/ws": "^8.18.1",
     "electron-builder": "^24.13.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
