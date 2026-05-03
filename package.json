@@ -1,87 +1,33 @@
 {
   "name": "sda-bible-song-pro",
-  "version": "1.0.0",
-  "description": "Bible Song for SDA Hymns and Bible",
-  "main": "dist/server/main.js",
-  "author": "vernonthedev",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
-    "clean": "rm -rf dist ts-dist",
-    "build": "bun run build:node && bun run build:panel",
-    "build:node": "tsc -p tsconfig.json",
-    "build:panel": "tsc -p tsconfig.panel.json",
-    "build:all": "bun run clean && bun run build",
-    "start": "bun run build && electron .",
-    "feedback:server": "node dist/server/feedback-backend.js",
-    "feedback:dev": "bun run --bun server/feedback-backend.ts",
-    "pack:mac": "bun run build && electron-builder --mac dir",
-    "dist:mac": "bun run build && electron-builder --mac",
-    "pack:win": "bun run build && electron-builder --win nsis portable",
-    "dist:win": "bun run build && electron-builder --win",
-    "dist:linux": "bun run build && electron-builder --linux",
-    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.panel.json"
-  },
-  "build": {
-    "appId": "com.sdabiblesongpro.desktop",
-    "productName": "SDA Bible Song Pro",
-    "files": [
-      "src/**/*.html",
-      "assets/**/*",
-      "ts-dist/**/*",
-      "dist/**/*",
-      "src/**/*",
-      "package.json",
-      "README.md",
-      "LICENSE"
-    ],
-    "directories": {
-      "buildResources": "electron/resources",
-      "output": "dist"
-    },
-    "mac": {
-      "category": "public.app-category.productivity",
-      "icon": "bible-song-pro-icon.icns",
-      "identity": null,
-      "target": [
-        "dir",
-        "zip"
-      ],
-      "artifactName": "${productName}-${version}-mac-${arch}.${ext}"
-    },
-    "win": {
-      "target": [
-        "nsis",
-        "portable"
-      ],
-      "icon": "bible-song-pro-icon.ico",
-      "publisherName": "East Kampala SDA Church"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "artifactName": "${productName} Setup-${version}-win-${arch}.${ext}"
-    },
-    "portable": {
-      "artifactName": "${productName} Portable-${version}-win-${arch}.${ext}"
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "zip"
-      ],
-      "icon": "electron/resources/linux-icon.png",
-      "category": "Utility",
-      "artifactName": "${productName}-${version}-linux-${arch}.${ext}"
-    }
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
   },
   "dependencies": {
-    "ws": "^8.18.0"
+    "@base-ui/react": "^1.4.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.14.0",
+    "next": "16.2.4",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "shadcn": "^4.6.0",
+    "tailwind-merge": "^3.5.0",
+    "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
-    "@types/node": "^25.6.0",
-    "@types/ws": "^8.18.1",
-    "electron": "^31.7.7",
-    "electron-builder": "^24.13.3",
-    "typescript": "^6.0.3"
+    "@tailwindcss/postcss": "^4.2.4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.4",
+    "tailwindcss": "^4.2.4",
+    "typescript": "^5"
   }
 }

@@ -3,13 +3,14 @@
 node_modules/
 dist/
 
-.qodo/
+.next/
+ts-dist/
 
+# Build outputs
 *.log
 *.tmp
 
+# Electron
 electron/resources/win-iconset/
 Thumbs.db
 Bible Song Pro_Screenshot/.DS_Store
-ts-dist/panel/
-ts-dist/
