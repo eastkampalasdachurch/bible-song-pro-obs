@@ -1108,6 +1108,40 @@ export default function PanelPage() {
           </aside>
         )}
 
+        {activeTab === "host" && (
+          <aside className="w-80 border-r border-border bg-card flex flex-col">
+            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Host / vMix</span><Button variant="outline" size="sm" title="Connect" onClick={() => { if (hostConnection === "disconnected") setHostConnection("connecting"); else setHostConnection("disconnected"); }}><RefreshCw className={`h-3 w-3 ${hostConnection === "connecting" ? "animate-spin" : ""}`} /></Button></div>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><VideoIcon className="h-3 w-3" /> Host Mode
+              <Badge variant={hostConnection === "connected" ? "default" : "secondary"} className="ml-auto text-xs">{hostConnection}</Badge>
+            </CardTitle></CardHeader><CardContent className="space-y-3"><Select defaultValue="obs"><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="obs">OBS Studio</SelectItem><SelectItem value="vmix">vMix</SelectItem><SelectItem value="standalone">Standalone</SelectItem></SelectContent></Select><div className="space-y-2"><Label>URL</Label><Input placeholder="http://localhost:8088" value={hostUrl} onChange={(e) => setHostUrl(e.target.value)} /></div><div className="space-y-2"><Label>API Key</Label><Input placeholder="Enter API key" type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} /></div><Button className="w-full" onClick={() => { setHostConnection("connecting"); setTimeout(() => setHostConnection("connected"), 1500); }} disabled={hostConnection === "connected"}><Wifi className="h-3 w-3 mr-1" /> {hostConnection === "connected" ? "Connected" : "Connect"}</Button></CardContent></Card>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Monitor className="h-3 w-3" /> Program Output</CardTitle></CardHeader><CardContent className="space-y-3">
+              <div className="flex items-center justify-between"><Label>Studio Mode</Label><Switch /></div>
+              <div className="flex items-center justify-between"><Label>Auto Reconnect</Label><Switch defaultChecked /></div>
+              <div className="text-xs text-muted-foreground">Status: {hostConnection === "connected" ? "Ready to receive API calls" : "Not connected"}</div>
+            </CardContent></Card>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><LayersIcon className="h-3 w-3" /> Sources</CardTitle></CardHeader><CardContent>
+              {hostConnection !== "connected" ? <div className="text-center text-muted-foreground text-sm py-4"><p>Not connected</p><p className="text-xs">Connect to see sources</p></div> : <div className="space-y-2">
+                <div className="flex items-center gap-2 p-2 rounded border"><Checkbox defaultChecked /> <span className="flex-1 text-sm">Bible Song Pro</span><Eye className="h-3 w-3" /></div>
+                <div className="flex items-center gap-2 p-2 rounded border"><Checkbox /> <span className="flex-1 text-sm">Main Display</span></div>
+              </div>}
+            </CardContent></Card>
+          </aside>
+        )}
+
+        {activeTab === "annotate" && (
+          <aside className="w-80 border-r border-border bg-card flex flex-col">
+            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Annotation Tools</span><Button variant="outline" size="sm" title="Clear all" onClick={() => setAnnotations([])}><Eraser className="h-3 w-3" /></Button></div>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Tools</CardTitle></CardHeader><CardContent><div className="grid grid-cols-4 gap-2">
+              <Button variant={selectedAnnotationTool === "pen" ? "secondary" : "outline"} size="icon" title="Pen" onClick={() => setSelectedAnnotationTool("pen")}><Pen className="h-4 w-4" /></Button>
+              <Button variant={selectedAnnotationTool === "highlighter" ? "secondary" : "outline"} size="icon" title="Highlighter" onClick={() => setSelectedAnnotationTool("highlighter")}><Highlighter className="h-4 w-4" /></Button>
+              <Button variant={selectedAnnotationTool === "eraser" ? "secondary" : "outline"} size="icon" title="Eraser" onClick={() => setSelectedAnnotationTool("eraser")}><Eraser className="h-4 w-4" /></Button>
+              <Button variant={selectedAnnotationTool === "text" ? "secondary" : "outline"} size="icon" title="Text" onClick={() => setSelectedAnnotationTool("text")}><TypeIcon className="h-4 w-4" /></Button>
+            </div></CardContent></Card>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Color</CardTitle></CardHeader><CardContent><div className="flex gap-1 flex-wrap">{quickColors.map(c => <Button key={c} variant={annotationColor === c ? "secondary" : "outline"} size="icon" className="w-6 h-6" style={{backgroundColor: c}} onClick={() => setAnnotationColor(c)} />)}</div></CardContent></Card>
+            <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Stroke: {annotationStroke}px</CardTitle></CardHeader><CardContent><Slider value={[annotationStroke]} onValueChange={(v) => setAnnotationStroke(Array.isArray(v) ? v[0] : v)} min={1} max={20} step={1} /></CardContent></Card>
+          </aside>
+        )}
+
         {activeTab === "schedule" && (
           <aside className="w-80 border-r border-border bg-card flex flex-col">
             <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Schedule / Setlist</span><Button variant="outline" size="sm" onClick={() => { if (selectedSong) setScheduleItems([...scheduleItems, { id: `schedule-${Date.now()}`, type: "song", itemId: selectedSong.id, title: selectedSong.title, order: scheduleItems.length + 1 }]); }}><Plus className="h-3 w-3" /></Button></div>
@@ -1124,8 +1158,13 @@ export default function PanelPage() {
                         <div className="text-xs text-muted-foreground">{item.type}</div>
                       </div>
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setScheduleItems(scheduleItems.filter(s => s.id !== item.id))}><X className="h-3 w-3" /></Button>
-        </div>
-      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </aside>
+        )}
 
       {/* Hidden file inputs */}
       <input type="file" id="import-file" hidden multiple onChange={(e) => handleImportSongs()} />
