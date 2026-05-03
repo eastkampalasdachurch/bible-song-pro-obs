@@ -148,7 +148,7 @@ const BIBLE_BOOKS: BibleBook[] = [
 ];
 
 // Sample songs - users can add/edit/delete their own songs
-// Bible content is now fetched from live API (bible-api.com)
+// Bible content is now fetched from live API (bible.helloao.org)
 const DEFAULT_SONGS: Song[] = [
   { id: "1", title: "Joyful, Joyful", number: 1, verses: 2, lyrics: ["Joyful, joyful, we adore Thee", "God of glory, Lord of love"] },
   { id: "2", title: "Amazing Grace", number: 2, verses: 4, lyrics: ["Amazing grace, how sweet the sound", "That saved a wretch like me"] },
@@ -409,8 +409,8 @@ export default function PanelPage() {
     }
   };
 
-  // Note: Current Bible API (bible-api.com) only supports World English Bible (WEB)
-  // For multiple translations, we'd need a different API or service
+  // Note: Current Bible API (bible.helloao.org) supports King James Version (KJV)
+  // Additional translations can be added as they become available
 
   // localStorage persistence
   useEffect(() => {
