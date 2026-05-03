@@ -197,8 +197,7 @@ const ANNOTATION_TOOLS: AnnotationTool[] = [
 ];
 
 const BIBLE_VERSIONS = [
-  { id: "kjv", name: "King James Version (KJV)" },
-  { id: "web", name: "World English Bible (WEB)" },
+  { id: "KJV", name: "King James Version (KJV)" },
 ];
 
 type ToolbarTab = "bible" | "songs" | "scenes" | "media" | "audio" | "schedule" | "host" | "annotate";
@@ -246,7 +245,7 @@ export default function PanelPage() {
   const [verseStart, setVerseStart] = useState<number | null>(null);
   const [verseEnd, setVerseEnd] = useState<number | null>(null);
   const [selectedScene, setSelectedScene] = useState<Scene | null>(null);
-   const [bibleVersion, setBibleVersion] = useState("kjv");
+   const [bibleVersion, setBibleVersion] = useState("KJV");
 
   // Source management functions
   const getSourceTypeColor = (type: string) => {
@@ -371,12 +370,12 @@ export default function PanelPage() {
   const [translationContent, setTranslationContent] = useState("");
   const [bilingualEnabled, setBilingualEnabled] = useState(false);
 
-  // Bible API functions (using bible-api.com with KJV translation)
-  const fetchChapter = async (book: string, chapter: number, translation: string = "kjv") => {
+  // Bible API functions (using bible.helloao.org as requested)
+  const fetchChapter = async (book: string, chapter: number, translation: string = "KJV") => {
     try {
-      // bible-api.com uses format like "genesis+1?translation=kjv"
-      const bookName = book.toLowerCase();
-      const response = await fetch(`https://bible-api.com/${bookName}+${chapter}?translation=${translation}`);
+      // bible.helloao.org uses format like "/api/KJV/GEN/1.json"
+      const bookId = book.toUpperCase().substring(0, 3); // Convert to 3-letter book ID
+      const response = await fetch(`https://bible.helloao.org/api/${translation}/${bookId}/${chapter}.json`);
       const chapterData = await response.json();
       return chapterData;
     } catch (error) {
@@ -530,23 +529,37 @@ export default function PanelPage() {
     setIsFetchingLyrics(true);
     try {
       const chapterData = await fetchChapter(book.name, chapter, bibleVersion);
-      if (chapterData && chapterData.verses) {
+      if (chapterData && chapterData.chapter && chapterData.chapter.content) {
         let content = '';
         const startVerse = verses?.start || 1;
-        const endVerse = verses?.end || chapterData.verses.length;
+        const endVerse = verses?.end || 999; // High number to include all verses
 
-        for (let i = startVerse - 1; i < Math.min(endVerse, chapterData.verses.length); i++) {
-          const verse = chapterData.verses[i];
-          if (verse) {
-            // Remove extra newlines and clean up text
-            content += verse.text.replace(/\n/g, ' ').trim() + ' ';
+        // Parse the complex content structure from bible.helloao.org
+        const verses = chapterData.chapter.content.filter((item: any) => item.type === 'verse');
+
+        for (let i = startVerse - 1; i < Math.min(endVerse, verses.length); i++) {
+          const verse = verses[i];
+          if (verse && verse.content) {
+            // Extract text from verse content array
+            let verseText = '';
+            if (Array.isArray(verse.content)) {
+              verseText = verse.content.map((part: any) => {
+                if (typeof part === 'string') return part;
+                if (part && typeof part === 'object' && part.text) return part.text;
+                return '';
+              }).join(' ');
+            } else if (typeof verse.content === 'string') {
+              verseText = verse.content;
+            }
+
+            content += verseText.replace(/\n/g, ' ').trim() + ' ';
           }
         }
 
         setFetchedLyrics([content.trim()]);
         setLineCursor(0);
       } else {
-        console.warn('No verses found in chapter data:', chapterData);
+        console.warn('No chapter content found in API response:', chapterData);
         setFetchedLyrics([]);
       }
     } catch (error) {
@@ -871,7 +884,7 @@ export default function PanelPage() {
                 {settingsTab === "bible" && (
                   <div className="space-y-4">
                     <Card><CardHeader><CardTitle className="text-sm">Bible Settings</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <Select value={bibleVersion} onValueChange={(v) => setBibleVersion(v || "kjv")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{BIBLE_VERSIONS.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
+                      <Select value={bibleVersion} onValueChange={(v) => setBibleVersion(v || "KJV")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{BIBLE_VERSIONS.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
                       <div className="flex items-center justify-between"><Label>Dual Bible</Label><Switch checked={dualBibleEnabled} onCheckedChange={setDualBibleEnabled} /></div>
                       {dualBibleEnabled && <div className="grid grid-cols-2 gap-4">
                         <Select value={dualPrimaryVersion} onValueChange={(v) => setDualPrimaryVersion(v || "kjv")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{BIBLE_VERSIONS.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
@@ -1025,7 +1038,7 @@ export default function PanelPage() {
             <label htmlFor="auto-advance" className="cursor-pointer">Auto Advance</label>
           </div>
           <Separator orientation="vertical" className="h-4" />
-          <Select value={bibleVersion} onValueChange={(v) => setBibleVersion(v || "kjv")}>
+          <Select value={bibleVersion} onValueChange={(v) => setBibleVersion(v || "KJV")}>
             <SelectTrigger className="h-6 text-xs w-32"><SelectValue /></SelectTrigger>
             <SelectContent>
               {BIBLE_VERSIONS.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
