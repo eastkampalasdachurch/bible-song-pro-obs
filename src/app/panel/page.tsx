@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -299,6 +299,33 @@ export default function PanelPage() {
   const [showTranslationPanel, setShowTranslationPanel] = useState(false);
   const [translationContent, setTranslationContent] = useState("");
   const [bilingualEnabled, setBilingualEnabled] = useState(false);
+
+  // localStorage persistence
+  useEffect(() => {
+    const saved = localStorage.getItem("bible-song-pro-settings");
+    if (saved) {
+      try {
+        const settings = JSON.parse(saved);
+        if (settings.fontSize) setFontSize(settings.fontSize);
+        if (settings.bgColor) setBgColor(settings.bgColor);
+        if (settings.theme) setTheme(settings.theme);
+        if (settings.bibleVersion) setBibleVersion(settings.bibleVersion);
+        if (settings.linesPerPage) setLinesPerPage(settings.linesPerPage);
+        if (settings.autoAdvance !== undefined) setAutoAdvance(settings.autoAdvance);
+        if (settings.autoGoLive !== undefined) setAutoGoLive(settings.autoGoLive);
+      } catch (e) { console.error("Failed to load settings:", e); }
+    }
+  }, []);
+
+  useEffect(() => {
+    const settings = { fontSize, bgColor, theme, bibleVersion, linesPerPage, autoAdvance, autoGoLive };
+    localStorage.setItem("bible-song-pro-settings", JSON.stringify(settings));
+  }, [fontSize, bgColor, theme, bibleVersion, linesPerPage, autoAdvance, autoGoLive]);
+
+  // Save songs to localStorage
+  useEffect(() => {
+    localStorage.setItem("bible-song-pro-songs", JSON.stringify(songs));
+  }, [songs]);
 
   // Editor mode
   const [editorMode, setEditorMode] = useState<"text" | "buttons">("buttons");
