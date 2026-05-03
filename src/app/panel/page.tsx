@@ -371,6 +371,60 @@ export default function PanelPage() {
   const [translationContent, setTranslationContent] = useState("");
   const [bilingualEnabled, setBilingualEnabled] = useState(false);
 
+  // Bible API functions
+  const fetchAvailableTranslations = async () => {
+    try {
+      const response = await fetch('https://bible.helloao.org/api/available_translations.json');
+      const translations = await response.json();
+      return translations;
+    } catch (error) {
+      console.error('Failed to fetch translations:', error);
+      return [];
+    }
+  };
+
+  const fetchBooksForTranslation = async (translation: string) => {
+    try {
+      const response = await fetch(`https://bible.helloao.org/api/${translation}/books.json`);
+      const books = await response.json();
+      return books;
+    } catch (error) {
+      console.error('Failed to fetch books:', error);
+      return [];
+    }
+  };
+
+  const fetchChapter = async (translation: string, book: string, chapter: number) => {
+    try {
+      const response = await fetch(`https://bible.helloao.org/api/${translation}/${book}/${chapter}.json`);
+      const chapterData = await response.json();
+      return chapterData;
+    } catch (error) {
+      console.error('Failed to fetch chapter:', error);
+      return null;
+    }
+  };
+
+  // Load available translations on mount
+  useEffect(() => {
+    fetchAvailableTranslations().then(translations => {
+      if (translations.length > 0) {
+        // Update BIBLE_VERSIONS with API data
+        const apiVersions = translations.map((t: any) => ({
+          id: t.identifier,
+          name: t.name
+        }));
+        // Merge with existing versions, prioritizing API versions
+        const mergedVersions = [
+          ...apiVersions,
+          ...BIBLE_VERSIONS.filter(v => !apiVersions.find((av: any) => av.id === v.id))
+        ];
+        // Update the constant (this would need refactoring for full dynamic loading)
+        console.log('Available Bible versions:', mergedVersions);
+      }
+    });
+  }, []);
+
   // localStorage persistence
   useEffect(() => {
     const saved = localStorage.getItem("bible-song-pro-settings");
@@ -392,6 +446,13 @@ export default function PanelPage() {
     const settings = { fontSize, bgColor, theme, bibleVersion, linesPerPage, autoAdvance, autoGoLive };
     localStorage.setItem("bible-song-pro-settings", JSON.stringify(settings));
   }, [fontSize, bgColor, theme, bibleVersion, linesPerPage, autoAdvance, autoGoLive]);
+
+  // Load chapter when book and chapter are selected
+  useEffect(() => {
+    if (selectedBook && selectedChapter) {
+      loadChapter(selectedBook, selectedChapter);
+    }
+  }, [selectedBook, selectedChapter, bibleVersion]);
 
   // Save songs to localStorage
   useEffect(() => {
@@ -495,8 +556,38 @@ export default function PanelPage() {
 
   const getVerseOptions = () => {
     if (!selectedBook || !selectedChapter) return [];
+    // For now, use estimated verse counts. In a full implementation,
+    // we'd fetch chapter data to get exact verse counts
     const baseVerses = selectedChapter === 1 ? 31 : selectedChapter === 2 ? 25 : 20;
     return Array.from({ length: Math.min(baseVerses, 50) }, (_, i) => i + 1);
+  };
+
+  // Fetch and display chapter content
+  const loadChapter = async (book: BibleBook, chapter: number, verses?: { start?: number; end?: number }) => {
+    setIsFetchingLyrics(true);
+    try {
+      const chapterData = await fetchChapter(bibleVersion, book.id.toUpperCase(), chapter);
+      if (chapterData && chapterData.verses) {
+        let content = '';
+        const startVerse = verses?.start || 1;
+        const endVerse = verses?.end || chapterData.verses.length;
+
+        for (let i = startVerse - 1; i < Math.min(endVerse, chapterData.verses.length); i++) {
+          const verse = chapterData.verses[i];
+          if (verse) {
+            content += verse.text + ' ';
+          }
+        }
+
+        setFetchedLyrics([content.trim()]);
+        setLineCursor(0);
+      }
+    } catch (error) {
+      console.error('Failed to load chapter:', error);
+      setFetchedLyrics([]);
+    } finally {
+      setIsFetchingLyrics(false);
+    }
   };
 
   const handleGoLive = () => {
@@ -605,6 +696,9 @@ export default function PanelPage() {
   const getPreviewContent = () => {
     if (selectedSong?.lyrics) {
       return selectedSong.lyrics.slice(songLineCursor * linesPerPage, (songLineCursor + 1) * linesPerPage).join("\n");
+    }
+    if (fetchedLyrics.length > 0) {
+      return fetchedLyrics.slice(lineCursor * linesPerPage, (lineCursor + 1) * linesPerPage).join("\n");
     }
     if (selectedBook && selectedChapter) return `${selectedBook.name} ${selectedChapter}`;
     return selectedItem?.title || "";
@@ -1178,6 +1272,176 @@ export default function PanelPage() {
             </ScrollArea>
           </aside>
         )}
+
+        <main className="flex-1 overflow-auto">
+          <div className="p-4 space-y-4">
+            {activeTab === "songs" && selectedSong && (
+              <>
+                {editorMode === "text" && (
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Lyrics Editor</CardTitle></CardHeader>
+                    <CardContent className="space-y-4">
+                      <textarea
+                        className="w-full h-48 p-3 rounded-md border border-input bg-background font-mono text-sm resize-none"
+                        placeholder="Type or paste lyrics here..."
+                        value={lyricsEditorContent}
+                        onChange={(e) => setLyricsEditorContent(e.target.value)}
+                      />
+                      <div className="flex items-center justify-between">
+                        <Button variant="outline" size="sm" onClick={() => setShowTranslationPanel(!showTranslationPanel)}><TypeIcon className="h-3 w-3 mr-1" /> Translation</Button>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Word count: {lyricsEditorContent.split(/\s+/).filter(Boolean).length}</span>
+                        </div>
+                      </div>
+                      {showTranslationPanel && (
+                        <Card className="bg-muted/50">
+                          <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><TypeIcon className="h-3 w-3" /> Translation</CardTitle></CardHeader>
+                          <CardContent className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Checkbox id="bilingual" checked={bilingualEnabled} onCheckedChange={(c) => setBilingualEnabled(!!c)} />
+                                <label htmlFor="bilingual" className="text-xs">Show bilingual globally</label>
+                              </div>
+                              <div className="flex gap-1">
+                                <Button variant="outline" size="sm">Update</Button>
+                                <Button variant="outline" size="sm">Remove</Button>
+                              </div>
+                            </div>
+                            <textarea
+                              className="w-full h-32 p-3 rounded-md border border-input bg-background font-mono text-sm resize-none"
+                              placeholder="Translated lyrics will appear here..."
+                              value={translationContent}
+                              onChange={(e) => setTranslationContent(e.target.value)}
+                            />
+                          </CardContent>
+                        </Card>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+                {editorMode === "buttons" && (
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Lyrics Editor (Buttons)</CardTitle></CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-4 gap-2">
+                        {selectedSong?.lyrics?.map((line, index) => (
+                          <Button key={index} variant="outline" size="sm" className="text-left h-auto py-2 px-3">
+                            <span className="text-xs">{line}</span>
+                          </Button>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm">Add Line</Button>
+                        <Button variant="outline" size="sm">Edit</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            )}
+
+            {selectedBook && (
+              <Card>
+                <CardHeader><CardTitle className="text-sm">Select Passage</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Book</Label>
+                      <Input value={selectedBook.name} disabled />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Chapter</Label>
+                      <Select value={selectedChapter?.toString() || ""} onValueChange={(v) => setSelectedChapter(v ? parseInt(v) : null)}>
+                        <SelectTrigger><SelectValue placeholder="Select chapter" /></SelectTrigger>
+                        <SelectContent>
+                          {getChapterOptions().map((ch) => <SelectItem key={ch} value={ch.toString()}>{ch}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Verses (optional)</Label>
+                      <div className="flex gap-2">
+                        <Select value={verseStart?.toString() || ""} onValueChange={(v) => setVerseStart(v ? parseInt(v) : null)}>
+                          <SelectTrigger><SelectValue placeholder="From" /></SelectTrigger>
+                          <SelectContent>
+                            {getVerseOptions().map((v) => <SelectItem key={v} value={v.toString()}>{v}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <span className="self-center">-</span>
+                        <Select value={verseEnd?.toString() || ""} onValueChange={(v) => setVerseEnd(v ? parseInt(v) : null)}>
+                          <SelectTrigger><SelectValue placeholder="To" /></SelectTrigger>
+                          <SelectContent>
+                            {getVerseOptions().map((v) => <SelectItem key={v} value={v.toString()}>{v}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card>
+              <CardHeader><CardTitle>{getContentTitle() || "Select content"}</CardTitle><CardDescription>{getContentTitle() ? `${selectedItem?.type === 'song' ? 'Song' : 'Bible'} • ${isLive ? 'Live on display' : 'Ready'}` : "Choose content from the sidebar"}</CardDescription></CardHeader>
+              <CardContent>
+                {getContentTitle() ? (
+                  <div className="space-y-4">
+                    <div className="rounded-lg p-8 text-center min-h-[300px] flex items-center justify-center" style={{ background: bgType === "gradient" ? `linear-gradient(${bgGradientAngle}deg, ${bgGradientStart}, ${bgGradientEnd})` : bgColor, opacity: bgOpacity / 100, width: `${displayWidth}%`, borderRadius: `${displayRadius}px`, margin: '0 auto', transform: `scale(${displayScale / 100})`, transformOrigin: displayAnchor === 'top' ? 'top center' : 'bottom center' }}>
+                      <div className="text-white" style={{ fontSize: `${fontSize}px`, lineHeight: lineSpacing, textTransform: textTransform, textAlign: hAlign }}>{getPreviewContent().split('\n').map((line, i) => <p key={i}>{line}</p>)}</div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="icon" onClick={handlePrevPage}><ChevronLeft className="h-4 w-4" /></Button>
+                        <span className="text-sm text-muted-foreground">{activeTab === "songs" && selectedSong?.lyrics ? `${songLineCursor + 1} / ${Math.ceil((selectedSong.lyrics?.length || 1) / linesPerPage)}` : `Page ${currentPage + 1}`}</span>
+                        <Button variant="outline" size="icon" onClick={handleNextPage}><ChevronRight className="h-4 w-4" /></Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button onClick={handleGoLive}><Play className="h-4 w-4 mr-1" /> Go Live</Button>
+                        <Button variant="outline" onClick={handleClear}>Clear</Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-dashed p-12 text-center text-muted-foreground">
+                    {activeTab === "bible" ? <><Book className="h-12 w-12 mx-auto mb-4 opacity-50" /><p>Select a book and chapter</p></> : activeTab === "songs" ? <><Music className="h-12 w-12 mx-auto mb-4 opacity-50" /><p>Select a song</p></> : <><Monitor className="h-12 w-12 mx-auto mb-4 opacity-50" /><p>Select content</p></>}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle className="flex items-center gap-2"><Settings className="h-4 w-4" /> Live Controls</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-3 gap-2">
+                  <Label className="col-span-3 text-xs text-muted-foreground">Lines per Page</Label>
+                  <div className="col-span-3 flex gap-1">
+                    {[1,2,3,4,5,6].map(n => <Button key={n} variant={linesPerPage === n ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setLinesPerPage(n)}>{n}</Button>)}
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <Label className="col-span-3 text-xs text-muted-foreground">Display Mode</Label>
+                  <div className="col-span-3 flex gap-1">
+                    <Button variant={displayMode === "full" ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setDisplayMode("full")}>FS</Button>
+                    <Button variant={displayMode === "lt" ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setDisplayMode("lt")}>LT</Button>
+                    <Button variant={displayMode === "custom" ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setDisplayMode("custom")}>Custom</Button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  <Label className="col-span-4 text-xs text-muted-foreground">Background</Label>
+                  <div className="col-span-4 flex gap-1">
+                    <Button variant={bgType === "solid" ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setBgType("solid")}>BG</Button>
+                    <Button variant={bgType === "gradient" ? "secondary" : "outline"} size="sm" className="flex-1" onClick={() => setBgType("gradient")}>GB</Button>
+                    <Button variant="outline" size="sm" className="flex-1">Image</Button>
+                    <Button variant="outline" size="sm" className="flex-1">Video</Button>
+                  </div>
+                </div>
+                <div className="space-x-2"><Label>Color:</Label><Input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-8 h-8 p-0.5" /><span className="text-sm text-muted-foreground">{bgColor}</span></div>
+                <div className="grid grid-cols-2 gap-4"><div className="flex items-center justify-between p-3 rounded-lg bg-muted"><Label className="text-sm">Auto Advance</Label><Switch checked={autoAdvance} onCheckedChange={setAutoAdvance} /></div><div className="flex items-center justify-between p-3 rounded-lg bg-muted"><Label className="text-sm">Auto Go Live</Label><Switch checked={autoGoLive} onCheckedChange={setAutoGoLive} /></div></div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
 
       {/* Hidden file inputs */}
       <input type="file" id="import-file" hidden multiple onChange={(e) => handleImportSongs()} />
