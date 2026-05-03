@@ -25,9 +25,7 @@
     "appId": "com.sdabiblesongpro.desktop",
     "productName": "Bible Song Pro",
     "files": [
-      "Bible Song Pro panel.html",
-      "BSP_display.html",
-      "index.html",
+      "src/**/*.html",
       "assets/**/*",
       "ts-dist/**/*",
       "dist/**/*",
