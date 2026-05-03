@@ -205,7 +205,7 @@ type ToolbarTab = "bible" | "songs" | "scenes" | "media" | "audio" | "schedule" 
 
 export default function PanelPage() {
   const [activeTab, setActiveTab] = useState<ToolbarTab>("bible");
-  const [settingsTab, setSettingsTab] = useState("typography");
+  const [settingsTab, setSettingsTab] = useState("fullscreen");
   const [isLive, setIsLive] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -734,138 +734,124 @@ export default function PanelPage() {
 
         <main className="flex-1 overflow-auto">
           {activeTab === "settings" ? (
-            <div className="p-4">
-              <Tabs value={settingsTab} onValueChange={setSettingsTab}>
-                <TabsList className="grid grid-cols-6 w-full">
-                  <TabsTrigger value="typography" className="gap-1"><Type className="h-3 w-3" /> Typography</TabsTrigger>
-                  <TabsTrigger value="background" className="gap-1"><Image className="h-3 w-3" /> Background</TabsTrigger>
-                  <TabsTrigger value="display" className="gap-1"><Monitor className="h-3 w-3" /> Display</TabsTrigger>
-                  <TabsTrigger value="reference" className="gap-1"><Book className="h-3 w-3" /> Reference</TabsTrigger>
-                  <TabsTrigger value="animation" className="gap-1"><FlipHorizontal className="h-3 w-3" /> Animation</TabsTrigger>
-                  <TabsTrigger value="theme" className="gap-1"><Palette className="h-3 w-3" /> Theme</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="typography" className="space-y-4 mt-4">
-                  <Card><CardHeader><CardTitle className="text-sm">Full Screen Mode (FS)</CardTitle></CardHeader><CardContent className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2"><Label>Font Size: {fsFontSize}pt</Label><Slider value={[fsFontSize]} onValueChange={(v) => setFsFontSize(Array.isArray(v) ? v[0] : v)} min={12} max={120} step={1} /></div>
-                    <div className="space-y-2"><Label>Line Height: {fsLineHeight}</Label><Slider value={fsLineHeight * 50} onValueChange={(v) => setFsLineHeight((Array.isArray(v) ? v[0] : v) / 50)} min={80} max={200} step={5} /></div>
-                    <div className="space-y-2"><Label>Word Spacing: {fsWordSpacing}px</Label><Slider value={[fsWordSpacing + 10]} onValueChange={(v) => setFsWordSpacing((Array.isArray(v) ? v[0] : v) - 10)} min={0} max={20} step={1} /></div>
-                    <div className="space-y-2"><Label>Letter Spacing: {fsLetterSpacing}px</Label><Slider value={[fsLetterSpacing + 5]} onValueChange={(v) => setFsLetterSpacing((Array.isArray(v) ? v[0] : v) - 5)} min={0} max={10} step={1} /></div>
-                    <div className="space-y-2"><Label>Padding LR: {fsPaddingLR}%</Label><Slider value={[fsPaddingLR]} onValueChange={(v) => setFsPaddingLR(Array.isArray(v) ? v[0] : v)} min={0} max={30} step={1} /></div>
-                    <div className="space-y-2"><Label>Padding TB: {fsPaddingTB}%</Label><Slider value={[fsPaddingTB]} onValueChange={(v) => setFsPaddingTB(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
-                    <div className="space-y-2"><Label>Text X: {fsTextX}px</Label><Slider value={[fsTextX + 50]} onValueChange={(v) => setFsTextX((Array.isArray(v) ? v[0] : v) - 50)} min={0} max={100} step={1} /></div>
-                    <div className="space-y-2"><Label>Text Y: {fsTextY}px</Label><Slider value={[fsTextY + 50]} onValueChange={(v) => setFsTextY((Array.isArray(v) ? v[0] : v) - 50)} min={0} max={100} step={1} /></div>
-                    <div className="space-y-2"><Label>Width: {fsWidthPct}%</Label><Slider value={[fsWidthPct]} onValueChange={(v) => setFsWidthPct(Array.isArray(v) ? v[0] : v)} min={30} max={100} step={1} /></div>
-                    <div className="space-y-2"><Label>Scale: {fsScalePct}%</Label><Slider value={[fsScalePct]} onValueChange={(v) => setFsScalePct(Array.isArray(v) ? v[0] : v)} min={30} max={150} step={5} /></div>
-                    <div className="space-y-2"><Label>Border Radius: {fsBorderRadius}px</Label><Slider value={[fsBorderRadius]} onValueChange={(v) => setFsBorderRadius(Array.isArray(v) ? v[0] : v)} min={0} max={50} step={1} /></div>
-                    <div className="space-y-2"><Label>Shadow Opacity: {fsShadowOpacity}%</Label><Slider value={[fsShadowOpacity]} onValueChange={(v) => setFsShadowOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
-                    <div className="space-y-2"><Label>Shadow Blur: {fsShadowBlur}px</Label><Slider value={[fsShadowBlur]} onValueChange={(v) => setFsShadowBlur(Array.isArray(v) ? v[0] : v)} min={0} max={30} step={1} /></div>
-                    <div className="space-y-2"><Label>Shadow Offset: {fsShadowOffset}px</Label><Slider value={[fsShadowOffset]} onValueChange={(v) => setFsShadowOffset(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
-                  </CardContent></Card>
-                  <Card><CardHeader><CardTitle className="text-sm">Reference Font Size: {fsRefFontSize}pt</CardTitle></CardHeader><CardContent><Slider value={[fsRefFontSize]} onValueChange={(v) => setFsRefFontSize(Array.isArray(v) ? v[0] : v)} min={10} max={72} step={1} /></CardContent></Card>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Card><CardHeader><CardTitle className="text-sm">Presets</CardTitle></CardHeader><CardContent>
-                      <Select value={selectedPreset} onValueChange={(v) => setSelectedPreset(v || "default")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="default">Default</SelectItem><SelectItem value="rounded-card">Rounded Card</SelectItem><SelectItem value="square-card">Square Card</SelectItem><SelectItem value="top-anchor">Top Anchor</SelectItem></SelectContent></Select>
-                      <div className="flex gap-2 mt-2"><Button variant="outline" size="sm"><Save className="h-3 w-3 mr-1" /> Save</Button><Button variant="outline" size="sm"><Upload className="h-3 w-3 mr-1" /> Load</Button></div>
-                    </CardContent></Card>
-                    <Card><CardHeader><CardTitle className="text-sm">Text Settings</CardTitle></CardHeader><CardContent className="space-y-3">
-                      <div className="space-y-2"><Label>Text Transform</Label><Select value={textTransform} onValueChange={(v) => setTextTransform(v as "none" | "uppercase")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem><SelectItem value="uppercase">Uppercase</SelectItem></SelectContent></Select></div>
-                      <div className="space-y-2"><Label>Align</Label><div className="flex gap-1"><Button variant={hAlign === "left" ? "secondary" : "outline"} size="icon" onClick={() => setHAlign("left")}><AlignLeft className="h-4 w-4" /></Button><Button variant={hAlign === "center" ? "secondary" : "outline"} size="icon" onClick={() => setHAlign("center")}><AlignCenter className="h-4 w-4" /></Button><Button variant={hAlign === "right" ? "secondary" : "outline"} size="icon" onClick={() => setHAlign("right")}><AlignRight className="h-4 w-4" /></Button></div></div>
-                    </CardContent></Card>
+            <div className="flex h-full">
+              <div className="w-56 border-r border-border bg-card flex flex-col">
+                <div className="p-3 border-b font-semibold flex items-center gap-2"><Settings className="h-4 w-4" /> Settings</div>
+                <ScrollArea className="flex-1">
+                  <div className="p-2 space-y-1">
+                    <button onClick={() => setSettingsTab("fullscreen")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "fullscreen" ? "bg-secondary" : "hover:bg-accent/50"}`}><Maximize2 className="h-4 w-4" /> Full Screen</button>
+                    <button onClick={() => setSettingsTab("lowerthird")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "lowerthird" ? "bg-secondary" : "hover:bg-accent/50"}`}><LayersIcon className="h-4 w-4" /> Lower Third</button>
+                    <button onClick={() => setSettingsTab("typography")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "typography" ? "bg-secondary" : "hover:bg-accent/50"}`}><Type className="h-4 w-4" /> Typography</button>
+                    <button onClick={() => setSettingsTab("background")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "background" ? "bg-secondary" : "hover:bg-accent/50"}`}><Image className="h-4 w-4" /> Background</button>
+                    <button onClick={() => setSettingsTab("songs")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "songs" ? "bg-secondary" : "hover:bg-accent/50"}`}><Music className="h-4 w-4" /> Songs</button>
+                    <button onClick={() => setSettingsTab("bible")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "bible" ? "bg-secondary" : "hover:bg-accent/50"}`}><Book className="h-4 w-4" /> Bible</button>
+                    <button onClick={() => setSettingsTab("display")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "display" ? "bg-secondary" : "hover:bg-accent/50"}`}><Monitor className="h-4 w-4" /> Display</button>
+                    <button onClick={() => setSettingsTab("animation")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "animation" ? "bg-secondary" : "hover:bg-accent/50"}`}><FlipHorizontal className="h-4 w-4" /> Animation</button>
+                    <button onClick={() => setSettingsTab("theme")} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm ${settingsTab === "theme" ? "bg-secondary" : "hover:bg-accent/50"}`}><Palette className="h-4 w-4" /> Theme</button>
                   </div>
-                </TabsContent>
+                </ScrollArea>
+              </div>
 
-                <TabsContent value="background" className="space-y-4 mt-4">
-                  <div className="grid grid-cols-2 gap-4">
+              <div className="flex-1 overflow-auto p-4">
+                {settingsTab === "fullscreen" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm">Full Screen Mode</CardTitle></CardHeader><CardContent className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2"><Label>Font Size: {fsFontSize}pt</Label><Slider value={[fsFontSize]} onValueChange={(v) => setFsFontSize(Array.isArray(v) ? v[0] : v)} min={12} max={120} step={1} /></div>
+                      <div className="space-y-2"><Label>Line Height: {fsLineHeight}</Label><Slider value={fsLineHeight * 50} onValueChange={(v) => setFsLineHeight((Array.isArray(v) ? v[0] : v) / 50)} min={80} max={200} step={5} /></div>
+                      <div className="space-y-2"><Label>Word Spacing: {fsWordSpacing}px</Label><Slider value={[fsWordSpacing + 10]} onValueChange={(v) => setFsWordSpacing((Array.isArray(v) ? v[0] : v) - 10)} min={0} max={20} step={1} /></div>
+                      <div className="space-y-2"><Label>Letter Spacing: {fsLetterSpacing}px</Label><Slider value={[fsLetterSpacing + 5]} onValueChange={(v) => setFsLetterSpacing((Array.isArray(v) ? v[0] : v) - 5)} min={0} max={10} step={1} /></div>
+                      <div className="space-y-2"><Label>Padding LR: {fsPaddingLR}%</Label><Slider value={[fsPaddingLR]} onValueChange={(v) => setFsPaddingLR(Array.isArray(v) ? v[0] : v)} min={0} max={30} step={1} /></div>
+                      <div className="space-y-2"><Label>Padding TB: {fsPaddingTB}%</Label><Slider value={[fsPaddingTB]} onValueChange={(v) => setFsPaddingTB(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
+                      <div className="space-y-2"><Label>Text X: {fsTextX}px</Label><Slider value={[fsTextX + 50]} onValueChange={(v) => setFsTextX((Array.isArray(v) ? v[0] : v) - 50)} min={0} max={100} step={1} /></div>
+                      <div className="space-y-2"><Label>Text Y: {fsTextY}px</Label><Slider value={[fsTextY + 50]} onValueChange={(v) => setFsTextY((Array.isArray(v) ? v[0] : v) - 50)} min={0} max={100} step={1} /></div>
+                      <div className="space-y-2"><Label>Width: {fsWidthPct}%</Label><Slider value={[fsWidthPct]} onValueChange={(v) => setFsWidthPct(Array.isArray(v) ? v[0] : v)} min={30} max={100} step={1} /></div>
+                      <div className="space-y-2"><Label>Scale: {fsScalePct}%</Label><Slider value={[fsScalePct]} onValueChange={(v) => setFsScalePct(Array.isArray(v) ? v[0] : v)} min={30} max={150} step={5} /></div>
+                      <div className="space-y-2"><Label>Border Radius: {fsBorderRadius}px</Label><Slider value={[fsBorderRadius]} onValueChange={(v) => setFsBorderRadius(Array.isArray(v) ? v[0] : v)} min={0} max={50} step={1} /></div>
+                      <div className="space-y-2"><Label>Shadow Opacity: {fsShadowOpacity}%</Label><Slider value={[fsShadowOpacity]} onValueChange={(v) => setFsShadowOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Reference: {fsRefFontSize}pt</CardTitle></CardHeader><CardContent><Slider value={[fsRefFontSize]} onValueChange={(v) => setFsRefFontSize(Array.isArray(v) ? v[0] : v)} min={10} max={72} step={1} /></CardContent></Card>
+                  </div>
+                )}
+
+                {settingsTab === "lowerthird" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm">Lower Third Mode</CardTitle></CardHeader><CardContent className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2"><Label>Font Size: {ltFontSize}pt</Label><Slider value={[ltFontSize]} onValueChange={(v) => setLtFontSize(Array.isArray(v) ? v[0] : v)} min={12} max={72} step={1} /></div>
+                      <div className="space-y-2"><Label>Line Height: {ltLineHeight}</Label><Slider value={ltLineHeight * 50} onValueChange={(v) => setLtLineHeight((Array.isArray(v) ? v[0] : v) / 50)} min={80} max={180} step={5} /></div>
+                      <div className="space-y-2"><Label>Word Spacing: {ltWordSpacing}px</Label><Slider value={[ltWordSpacing + 5]} onValueChange={(v) => setLtWordSpacing((Array.isArray(v) ? v[0] : v) - 5)} min={0} max={10} step={1} /></div>
+                      <div className="space-y-2"><Label>Letter Spacing: {ltLetterSpacing}px</Label><Slider value={[ltLetterSpacing + 2]} onValueChange={(v) => setLtLetterSpacing((Array.isArray(v) ? v[0] : v) - 2)} min={0} max={5} step={1} /></div>
+                      <div className="space-y-2"><Label>Padding LR: {ltPaddingLR}%</Label><Slider value={[ltPaddingLR]} onValueChange={(v) => setLtPaddingLR(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
+                      <div className="space-y-2"><Label>Padding TB: {ltPaddingTB}%</Label><Slider value={[ltPaddingTB]} onValueChange={(v) => setLtPaddingTB(Array.isArray(v) ? v[0] : v)} min={0} max={15} step={1} /></div>
+                      <div className="space-y-2"><Label>Width: {ltWidthPct}%</Label><Slider value={[ltWidthPct]} onValueChange={(v) => setLtWidthPct(Array.isArray(v) ? v[0] : v)} min={30} max={100} step={1} /></div>
+                      <div className="space-y-2"><Label>Scale: {ltScalePct}%</Label><Slider value={[ltScalePct]} onValueChange={(v) => setLtScalePct(Array.isArray(v) ? v[0] : v)} min={30} max={120} step={5} /></div>
+                      <div className="space-y-2"><Label>Border Radius: {ltBorderRadius}px</Label><Slider value={[ltBorderRadius]} onValueChange={(v) => setLtBorderRadius(Array.isArray(v) ? v[0] : v)} min={0} max={30} step={1} /></div>
+                      <div className="space-y-2"><Label>Shadow Opacity: {ltShadowOpacity}%</Label><Slider value={[ltShadowOpacity]} onValueChange={(v) => setLtShadowOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
+                      <div className="space-y-2"><Label>Shadow Blur: {ltShadowBlur}px</Label><Slider value={[ltShadowBlur]} onValueChange={(v) => setLtShadowBlur(Array.isArray(v) ? v[0] : v)} min={0} max={25} step={1} /></div>
+                      <div className="space-y-2"><Label>Shadow Offset: {ltShadowOffset}px</Label><Slider value={[ltShadowOffset]} onValueChange={(v) => setLtShadowOffset(Array.isArray(v) ? v[0] : v)} min={0} max={15} step={1} /></div>
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Reference: {ltRefFontSize}pt</CardTitle></CardHeader><CardContent><Slider value={[ltRefFontSize]} onValueChange={(v) => setLtRefFontSize(Array.isArray(v) ? v[0] : v)} min={8} max={36} step={1} /></CardContent></Card>
+                  </div>
+                )}
+
+                {settingsTab === "background" && (
+                  <div className="space-y-4">
                     <Card><CardHeader><CardTitle className="text-sm">Background Type</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <Select value={bgType} onValueChange={(v) => setBgType(v as "solid" | "gradient" | "image")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="solid">Solid Color</SelectItem><SelectItem value="gradient">Gradient</SelectItem><SelectItem value="image">Image</SelectItem><SelectItem value="video">Video</SelectItem></SelectContent></Select>
-                      {bgType === "solid" && <div className="space-y-2"><Label>Color</Label><div className="flex gap-2"><Input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-12 h-10 p-1" /><Input value={bgColor} onChange={(e) => setBgColor(e.target.value)} /></div></div>}
-                      {bgType === "gradient" && <>
-                        <div className="space-y-2"><Label>Angle: {bgGradientAngle}</Label><Slider value={bgGradientAngle} onValueChange={(v) => setBgGradientAngle(Array.isArray(v) ? v[0] : v)} min={0} max={360} step={5} /></div>
-                        <div className="space-y-2"><Label>Start Color</Label><div className="flex gap-2"><Input type="color" value={bgGradientStart} onChange={(e) => setBgGradientStart(e.target.value)} className="w-12 h-10 p-1" /><Input value={bgGradientStart} onChange={(e) => setBgGradientStart(e.target.value)} /></div></div>
-                        <div className="space-y-2"><Label>End Color</Label><div className="flex gap-2"><Input type="color" value={bgGradientEnd} onChange={(e) => setBgGradientEnd(e.target.value)} className="w-12 h-10 p-1" /><Input value={bgGradientEnd} onChange={(e) => setBgGradientEnd(e.target.value)} /></div></div>
-                      </>}
-                      {bgType === "image" && <div className="space-y-2"><Label>Image URL</Label><Input value={bgImageUrl} onChange={(e) => setBgImageUrl(e.target.value)} placeholder="https://..." /></div>}
-                      {bgType === "video" && <div className="space-y-2"><Label>Video URL</Label><Input value={bgVideoUrl} onChange={(e) => setBgVideoUrl(e.target.value)} placeholder="https://...mp4" /></div>}
+                      <div className="flex gap-2"><Button variant={bgType === "solid" ? "secondary" : "outline"} onClick={() => setBgType("solid")}>Solid</Button><Button variant={bgType === "gradient" ? "secondary" : "outline"} onClick={() => setBgType("gradient")}>Gradient</Button><Button variant={bgType === "image" ? "secondary" : "outline"} onClick={() => setBgType("image")}>Image</Button><Button variant={bgType === "video" ? "secondary" : "outline"} onClick={() => setBgType("video")}>Video</Button></div>
+                      {bgType === "solid" && <div className="space-y-2"><Label>Color</Label><div className="flex gap-2"><Input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-16 h-10 p-1" /><Input value={bgColor} onChange={(e) => setBgColor(e.target.value)} /></div></div>}
+                      {bgType === "gradient" && <><div className="space-y-2"><Label>Angle: {bgGradientAngle}</Label><Slider value={bgGradientAngle} onValueChange={(v) => setBgGradientAngle(Array.isArray(v) ? v[0] : v)} min={0} max={360} step={5} /></div><div className="grid grid-cols-2 gap-4"><div className="space-y-2"><Label>Start</Label><Input type="color" value={bgGradientStart} onChange={(e) => setBgGradientStart(e.target.value)} className="w-full h-10 p-1" /></div><div className="space-y-2"><Label>End</Label><Input type="color" value={bgGradientEnd} onChange={(e) => setBgGradientEnd(e.target.value)} className="w-full h-10 p-1" /></div></div></>}
+                      {(bgType === "image" || bgType === "video") && <div className="space-y-2"><Label>URL</Label><Input placeholder="https://..." value={bgType === "image" ? bgImageUrl : bgVideoUrl} onChange={(e) => bgType === "image" ? setBgImageUrl(e.target.value) : setBgVideoUrl(e.target.value)} /></div>}
                     </CardContent></Card>
-                    <Card><CardHeader><CardTitle className="text-sm">Background Effects</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <div className="space-y-2"><Label>Opacity: {bgOpacity}%</Label><Slider value={[bgOpacity]} onValueChange={(v) => setBgOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
-                      <div className="space-y-2"><Label>Blur: {bgBlur}px</Label><Slider value={[bgBlur]} onValueChange={(v) => setBgBlur(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
-                      {(bgType === "video" || bgType === "image") && <>
-                        <div className="space-y-2"><Label>Video Opacity: {bgVideoOpacity}%</Label><Slider value={[bgVideoOpacity]} onValueChange={(v) => setBgVideoOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
-                        <div className="space-y-2"><Label>Video Speed: {bgVideoSpeed}x</Label><Slider value={[bgVideoSpeed * 10]} onValueChange={(v) => setBgVideoSpeed((Array.isArray(v) ? v[0] : v) / 10)} min={5} max={20} step={1} /></div>
-                      </>}
-                      <div className="space-y-2"><Label>Y Offset: {bgY}</Label><Slider value={[bgY + 50]} onValueChange={(v) => setBgY((Array.isArray(v) ? v[0] : v) - 50)} min={0} max={100} step={1} /></div>
-                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Quick Colors</CardTitle></CardHeader><CardContent><div className="flex flex-wrap gap-2">{quickColors.map((c, i) => <button key={i} className="w-8 h-8 rounded border" style={{backgroundColor: c}} onClick={() => setBgColor(c)} />)}</div></CardContent></Card>
                   </div>
-                  <Card><CardHeader><CardTitle className="text-sm">Quick Colors</CardTitle></CardHeader><CardContent className="space-y-4">
-                    <Label>Preset Colors</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {quickColors.map((color, idx) => (
-                        <button key={idx} className="w-8 h-8 rounded border border-border hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => { setBgColor(color); setRecentColors([color, ...recentColors.filter(c => c !== color)].slice(0, 8)); }} title={color} />
-                      ))}
-                    </div>
-                    <Label>Recent Colors</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {recentColors.length > 0 ? recentColors.map((color, idx) => (
-                        <button key={idx} className="w-8 h-8 rounded border border-border hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => setBgColor(color)} title={color} />
-                      )) : <span className="text-xs text-muted-foreground">No recent colors</span>}
-                    </div>
-                  </CardContent></Card>
-                </TabsContent>
+                )}
 
-                <TabsContent value="display" className="space-y-4 mt-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <Card><CardHeader><CardTitle className="text-sm">Size</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <div className="space-y-2"><Label>Width: {displayWidth}%</Label><Slider value={displayWidth} onValueChange={(v) => setDisplayWidth(Array.isArray(v) ? v[0] : v)} min={20} max={100} step={1} /></div>
-                      <div className="space-y-2"><Label>Scale: {displayScale}%</Label><Slider value={displayScale} onValueChange={(v) => setDisplayScale(Array.isArray(v) ? v[0] : v)} min={20} max={150} step={5} /></div>
-                      <div className="space-y-2"><Label>Border Radius: {displayRadius}px</Label><Slider value={displayRadius} onValueChange={(v) => setDisplayRadius(Array.isArray(v) ? v[0] : v)} min={0} max={50} step={1} /></div>
-                      <div className="flex items-center justify-between"><Label>Auto Adjust Height</Label><Switch checked={autoAdjustHeight} onCheckedChange={setAutoAdjustHeight} /></div>
+                {settingsTab === "display" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm">Display Size</CardTitle></CardHeader><CardContent className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2"><Label>Width: {displayWidth}%</Label><Slider value={[displayWidth]} onValueChange={(v) => setDisplayWidth(Array.isArray(v) ? v[0] : v)} min={20} max={100} step={1} /></div>
+                      <div className="space-y-2"><Label>Scale: {displayScale}%</Label><Slider value={[displayScale]} onValueChange={(v) => setDisplayScale(Array.isArray(v) ? v[0] : v)} min={20} max={150} step={5} /></div>
+                      <div className="space-y-2"><Label>Radius: {displayRadius}px</Label><Slider value={[displayRadius]} onValueChange={(v) => setDisplayRadius(Array.isArray(v) ? v[0] : v)} min={0} max={50} step={1} /></div>
+                      <div className="flex items-center justify-between"><Label>Auto Height</Label><Switch checked={autoAdjustHeight} onCheckedChange={setAutoAdjustHeight} /></div>
                     </CardContent></Card>
-                    <Card><CardHeader><CardTitle className="text-sm">Position</CardTitle></CardHeader><CardContent className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm">Position</CardTitle></CardHeader><CardContent className="grid grid-cols-2 gap-4">
                       <Select value={displayAnchor} onValueChange={(v) => setDisplayAnchor(v as "top" | "bottom")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="top">Top</SelectItem><SelectItem value="bottom">Bottom</SelectItem></SelectContent></Select>
-                      <div className="space-y-2"><Label>Offset X: {displayOffsetX}</Label><Slider value={[displayOffsetX + 50]} onValueChange={(v) => setDisplayOffsetX((Array.isArray(v) ? v[0] : v) - 50)} min={0} max={100} step={1} /></div>
-                      <div className="space-y-2"><Label>Offset Y: {displayOffsetY}</Label><Slider value={[displayOffsetY + 50]} onValueChange={(v) => setDisplayOffsetY((Array.isArray(v) ? v[0] : v) - 50)} min={0} max={100} step={1} /></div>
+                      <div className="space-y-2"><Label>Y Offset: {displayOffsetY}</Label><Slider value={[displayOffsetY + 50]} onValueChange={(v) => setDisplayOffsetY((Array.isArray(v) ? v[0] : v) - 50)} min={0} max={100} step={1} /></div>
                     </CardContent></Card>
                   </div>
-                </TabsContent>
+                )}
 
-                <TabsContent value="reference" className="space-y-4 mt-4">
-                  <Card><CardHeader><CardTitle className="text-sm">Reference Display</CardTitle></CardHeader><CardContent className="space-y-4">
-                    <div className="flex items-center justify-between"><Label>Show Reference</Label><Switch checked={showRef} onCheckedChange={setShowRef} /></div>
-                    {showRef && <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2"><Label>Font Size: {refFontSize}pt</Label><Slider value={[refFontSize]} onValueChange={(v) => setRefFontSize(Array.isArray(v) ? v[0] : v)} min={10} max={48} step={1} /></div>
-                      <div className="space-y-2"><Label>Line Height: {refLineHeight}</Label><Slider value={refLineHeight * 50} onValueChange={(v) => setRefLineHeight((Array.isArray(v) ? v[0] : v) / 50)} min={80} max={180} step={5} /></div>
-                      <div className="space-y-2"><Label>Word Spacing: {refWordSpacing}px</Label><Slider value={[refWordSpacing + 5]} onValueChange={(v) => setRefWordSpacing((Array.isArray(v) ? v[0] : v) - 5)} min={0} max={10} step={1} /></div>
-                      <div className="space-y-2"><Label>Letter Spacing: {refLetterSpacing}px</Label><Slider value={[refLetterSpacing + 2]} onValueChange={(v) => setRefLetterSpacing((Array.isArray(v) ? v[0] : v) - 2)} min={0} max={5} step={1} /></div>
-                      <div className="space-y-2"><Label>Opacity: {refOpacity}%</Label><Slider value={[refOpacity]} onValueChange={(v) => setRefOpacity(Array.isArray(v) ? v[0] : v)} min={20} max={100} step={5} /></div>
-                      <div className="space-y-2"><Label>Border Width: {refBorderWidth}px</Label><Slider value={[refBorderWidth]} onValueChange={(v) => setRefBorderWidth(Array.isArray(v) ? v[0] : v)} min={0} max={5} step={1} /></div>
-                      <div className="space-y-2"><Label>Border Radius: {refBorderRadius}px</Label><Slider value={[refBorderRadius]} onValueChange={(v) => setRefBorderRadius(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
-                    </div>}
-                    {showRef && <div className="space-y-3">
-                      <div className="space-y-2"><Label>Text Transform</Label><Select value={refTextTransform} onValueChange={(v) => setRefTextTransform(v as "none" | "uppercase")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem><SelectItem value="uppercase">Uppercase</SelectItem></SelectContent></Select></div>
-                      <div className="space-y-2"><Label>Align</Label><div className="flex gap-1"><Button variant={refHAlign === "left" ? "secondary" : "outline"} size="icon" onClick={() => setRefHAlign("left")}><AlignLeft className="h-4 w-4" /></Button><Button variant={refHAlign === "center" ? "secondary" : "outline"} size="icon" onClick={() => setRefHAlign("center")}><AlignCenter className="h-4 w-4" /></Button><Button variant={refHAlign === "right" ? "secondary" : "outline"} size="icon" onClick={() => setRefHAlign("right")}><AlignRight className="h-4 w-4" /></Button></div></div>
-                    </div>}
-                  </CardContent></Card>
-                </TabsContent>
+                {settingsTab === "reference" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm">Reference Display</CardTitle></CardHeader><CardContent className="space-y-4">
+                      <div className="flex items-center justify-between"><Label>Show Reference</Label><Switch checked={showRef} onCheckedChange={setShowRef} /></div>
+                      {showRef && <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2"><Label>Font: {refFontSize}pt</Label><Slider value={[refFontSize]} onValueChange={(v) => setRefFontSize(Array.isArray(v) ? v[0] : v)} min={10} max={48} step={1} /></div>
+                        <div className="space-y-2"><Label>Line: {refLineHeight}</Label><Slider value={refLineHeight * 50} onValueChange={(v) => setRefLineHeight((Array.isArray(v) ? v[0] : v) / 50)} min={80} max={180} step={5} /></div>
+                        <div className="space-y-2"><Label>Opacity: {refOpacity}%</Label><Slider value={[refOpacity]} onValueChange={(v) => setRefOpacity(Array.isArray(v) ? v[0] : v)} min={20} max={100} step={5} /></div>
+                      </div>}
+                    </CardContent></Card>
+                  </div>
+                )}
 
-                <TabsContent value="animation" className="space-y-4 mt-4">
-                  <Card><CardHeader><CardTitle className="text-sm">Transition</CardTitle></CardHeader><CardContent className="space-y-4">
-                    <Select value={transitionType} onValueChange={(v) => setTransitionType(v as "none" | "fade" | "slide" | "dissolve")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem><SelectItem value="fade">Fade</SelectItem><SelectItem value="slide">Slide</SelectItem><SelectItem value="dissolve">Dissolve</SelectItem></SelectContent></Select>
-                    <div className="space-y-2"><Label>Duration: {transitionDuration}s</Label><Slider value={transitionDuration * 100} onValueChange={(v) => setTransitionDuration((Array.isArray(v) ? v[0] : v) / 100)} min={25} max={200} step={5} /></div>
-                  </CardContent></Card>
-                </TabsContent>
+                {settingsTab === "animation" && (
+                  <div className="space-y-4">
+                    <Card><CardHeader><CardTitle className="text-sm">Transition</CardTitle></CardHeader><CardContent className="space-y-4">
+                      <Select value={transitionType} onValueChange={(v) => setTransitionType(v as "none" | "fade" | "slide" | "dissolve")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem><SelectItem value="fade">Fade</SelectItem><SelectItem value="slide">Slide</SelectItem><SelectItem value="dissolve">Dissolve</SelectItem></SelectContent></Select>
+                      <div className="space-y-2"><Label>Duration: {transitionDuration}s</Label><Slider value={transitionDuration * 100} onValueChange={(v) => setTransitionDuration((Array.isArray(v) ? v[0] : v) / 100)} min={25} max={200} step={5} /></div>
+                    </CardContent></Card>
+                  </div>
+                )}
 
-                <TabsContent value="theme" className="space-y-4 mt-4">
-                  <div className="grid grid-cols-2 gap-4">
+                {settingsTab === "theme" && (
+                  <div className="space-y-4">
                     <Card><CardHeader><CardTitle className="text-sm">Appearance</CardTitle></CardHeader><CardContent className="space-y-4">
                       <Select value={theme} onValueChange={(v) => setTheme(v || "dark")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="dark">Dark</SelectItem><SelectItem value="light">Light</SelectItem><SelectItem value="system">System</SelectItem></SelectContent></Select>
-                      <Select value={language} onValueChange={(v) => setLanguage(v || "en")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="en">English</SelectItem><SelectItem value="es">Spanish</SelectItem><SelectItem value="fr">French</SelectItem><SelectItem value="de">German</SelectItem></SelectContent></Select>
+                      <Select value={language} onValueChange={(v) => setLanguage(v || "en")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="en">English</SelectItem><SelectItem value="es">Spanish</SelectItem><SelectItem value="fr">French</SelectItem></SelectContent></Select>
                     </CardContent></Card>
-                    <Card><CardHeader><CardTitle className="text-sm">Keyboard Shortcuts</CardTitle></CardHeader><CardContent className="space-y-2 text-sm"><div className="flex justify-between"><span>Go Live</span><Badge variant="outline">Space</Badge></div><div className="flex justify-between"><span>Clear</span><Badge variant="outline">Esc</Badge></div><div className="flex justify-between"><span>Next Page</span><Badge variant="outline">PageDown</Badge></div><div className="flex justify-between"><span>Prev Page</span><Badge variant="outline">PageUp</Badge></div></CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Keyboard Shortcuts</CardTitle></CardHeader><CardContent className="space-y-2 text-sm"><div className="flex justify-between"><span>Go Live</span><Badge variant="outline">Space</Badge></div><div className="flex justify-between"><span>Clear</span><Badge variant="outline">Esc</Badge></div><div className="flex justify-between"><span>Next</span><Badge variant="outline">PageDown</Badge></div><div className="flex justify-between"><span>Prev</span><Badge variant="outline">PageUp</Badge></div></CardContent></Card>
                   </div>
-                </TabsContent>
-              </Tabs>
+                )}
+              </div>
             </div>
           ) : (
             <div className="p-4 space-y-4">
