@@ -256,7 +256,7 @@ export default function PanelPage() {
   const [vAlign, setVAlign] = useState<"top" | "middle" | "bottom">("middle");
   const [autoResize, setAutoResize] = useState("shrink");
 
-  const [bgType, setBgType] = useState<"solid" | "gradient" | "image">("solid");
+  const [bgType, setBgType] = useState<"solid" | "gradient" | "image" | "video">("solid");
   const [bgColor, setBgColor] = useState("#000000");
   const [bgGradientStart, setBgGradientStart] = useState("#AD0000");
   const [bgGradientEnd, setBgGradientEnd] = useState("#000000");
@@ -715,16 +715,31 @@ export default function PanelPage() {
                 </TabsList>
 
                 <TabsContent value="typography" className="space-y-4 mt-4">
+                  <Card><CardHeader><CardTitle className="text-sm">Full Screen Mode (FS)</CardTitle></CardHeader><CardContent className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2"><Label>Font Size: {fsFontSize}pt</Label><Slider value={[fsFontSize]} onValueChange={(v) => setFsFontSize(Array.isArray(v) ? v[0] : v)} min={12} max={120} step={1} /></div>
+                    <div className="space-y-2"><Label>Line Height: {fsLineHeight}</Label><Slider value={fsLineHeight * 50} onValueChange={(v) => setFsLineHeight((Array.isArray(v) ? v[0] : v) / 50)} min={80} max={200} step={5} /></div>
+                    <div className="space-y-2"><Label>Word Spacing: {fsWordSpacing}px</Label><Slider value={[fsWordSpacing + 10]} onValueChange={(v) => setFsWordSpacing((Array.isArray(v) ? v[0] : v) - 10)} min={0} max={20} step={1} /></div>
+                    <div className="space-y-2"><Label>Letter Spacing: {fsLetterSpacing}px</Label><Slider value={[fsLetterSpacing + 5]} onValueChange={(v) => setFsLetterSpacing((Array.isArray(v) ? v[0] : v) - 5)} min={0} max={10} step={1} /></div>
+                    <div className="space-y-2"><Label>Padding LR: {fsPaddingLR}%</Label><Slider value={[fsPaddingLR]} onValueChange={(v) => setFsPaddingLR(Array.isArray(v) ? v[0] : v)} min={0} max={30} step={1} /></div>
+                    <div className="space-y-2"><Label>Padding TB: {fsPaddingTB}%</Label><Slider value={[fsPaddingTB]} onValueChange={(v) => setFsPaddingTB(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
+                    <div className="space-y-2"><Label>Text X: {fsTextX}px</Label><Slider value={[fsTextX + 50]} onValueChange={(v) => setFsTextX((Array.isArray(v) ? v[0] : v) - 50)} min={0} max={100} step={1} /></div>
+                    <div className="space-y-2"><Label>Text Y: {fsTextY}px</Label><Slider value={[fsTextY + 50]} onValueChange={(v) => setFsTextY((Array.isArray(v) ? v[0] : v) - 50)} min={0} max={100} step={1} /></div>
+                    <div className="space-y-2"><Label>Width: {fsWidthPct}%</Label><Slider value={[fsWidthPct]} onValueChange={(v) => setFsWidthPct(Array.isArray(v) ? v[0] : v)} min={30} max={100} step={1} /></div>
+                    <div className="space-y-2"><Label>Scale: {fsScalePct}%</Label><Slider value={[fsScalePct]} onValueChange={(v) => setFsScalePct(Array.isArray(v) ? v[0] : v)} min={30} max={150} step={5} /></div>
+                    <div className="space-y-2"><Label>Border Radius: {fsBorderRadius}px</Label><Slider value={[fsBorderRadius]} onValueChange={(v) => setFsBorderRadius(Array.isArray(v) ? v[0] : v)} min={0} max={50} step={1} /></div>
+                    <div className="space-y-2"><Label>Shadow Opacity: {fsShadowOpacity}%</Label><Slider value={[fsShadowOpacity]} onValueChange={(v) => setFsShadowOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
+                    <div className="space-y-2"><Label>Shadow Blur: {fsShadowBlur}px</Label><Slider value={[fsShadowBlur]} onValueChange={(v) => setFsShadowBlur(Array.isArray(v) ? v[0] : v)} min={0} max={30} step={1} /></div>
+                    <div className="space-y-2"><Label>Shadow Offset: {fsShadowOffset}px</Label><Slider value={[fsShadowOffset]} onValueChange={(v) => setFsShadowOffset(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
+                  </CardContent></Card>
+                  <Card><CardHeader><CardTitle className="text-sm">Reference Font Size: {fsRefFontSize}pt</CardTitle></CardHeader><CardContent><Slider value={[fsRefFontSize]} onValueChange={(v) => setFsRefFontSize(Array.isArray(v) ? v[0] : v)} min={10} max={72} step={1} /></CardContent></Card>
                   <div className="grid grid-cols-2 gap-4">
-                    <Card><CardHeader><CardTitle className="text-sm">Font Settings</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <div className="space-y-2"><Label>Font Size: {fontSize}px</Label><Slider value={fontSize} onValueChange={(v) => setFontSize(Array.isArray(v) ? v[0] : v)} min={12} max={72} step={1} /></div>
-                      <div className="space-y-2"><Label>Line Spacing: {lineSpacing}</Label><Slider value={lineSpacing * 50} onValueChange={(v) => setLineSpacing((Array.isArray(v) ? v[0] : v) / 50)} min={50} max={200} step={5} /></div>
-                      <div className="space-y-2"><Label>Text Transform</Label><Select value={textTransform} onValueChange={(v) => setTextTransform(v as "none" | "uppercase")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem><SelectItem value="uppercase">Uppercase</SelectItem></SelectContent></Select></div>
-                      <div className="space-y-2"><Label>Align</Label><div className="flex gap-1"><Button variant={hAlign === "left" ? "secondary" : "outline"} size="icon" onClick={() => setHAlign("left")}><AlignLeft className="h-4 w-4" /></Button><Button variant={hAlign === "center" ? "secondary" : "outline"} size="icon" onClick={() => setHAlign("center")}><AlignCenter className="h-4 w-4" /></Button><Button variant={hAlign === "right" ? "secondary" : "outline"} size="icon" onClick={() => setHAlign("right")}><AlignRight className="h-4 w-4" /></Button></div></div>
-                    </CardContent></Card>
                     <Card><CardHeader><CardTitle className="text-sm">Presets</CardTitle></CardHeader><CardContent>
                       <Select value={selectedPreset} onValueChange={(v) => setSelectedPreset(v || "default")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="default">Default</SelectItem><SelectItem value="rounded-card">Rounded Card</SelectItem><SelectItem value="square-card">Square Card</SelectItem><SelectItem value="top-anchor">Top Anchor</SelectItem></SelectContent></Select>
                       <div className="flex gap-2 mt-2"><Button variant="outline" size="sm"><Save className="h-3 w-3 mr-1" /> Save</Button><Button variant="outline" size="sm"><Upload className="h-3 w-3 mr-1" /> Load</Button></div>
+                    </CardContent></Card>
+                    <Card><CardHeader><CardTitle className="text-sm">Text Settings</CardTitle></CardHeader><CardContent className="space-y-3">
+                      <div className="space-y-2"><Label>Text Transform</Label><Select value={textTransform} onValueChange={(v) => setTextTransform(v as "none" | "uppercase")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem><SelectItem value="uppercase">Uppercase</SelectItem></SelectContent></Select></div>
+                      <div className="space-y-2"><Label>Align</Label><div className="flex gap-1"><Button variant={hAlign === "left" ? "secondary" : "outline"} size="icon" onClick={() => setHAlign("left")}><AlignLeft className="h-4 w-4" /></Button><Button variant={hAlign === "center" ? "secondary" : "outline"} size="icon" onClick={() => setHAlign("center")}><AlignCenter className="h-4 w-4" /></Button><Button variant={hAlign === "right" ? "secondary" : "outline"} size="icon" onClick={() => setHAlign("right")}><AlignRight className="h-4 w-4" /></Button></div></div>
                     </CardContent></Card>
                   </div>
                 </TabsContent>
@@ -732,29 +747,40 @@ export default function PanelPage() {
                 <TabsContent value="background" className="space-y-4 mt-4">
                   <div className="grid grid-cols-2 gap-4">
                     <Card><CardHeader><CardTitle className="text-sm">Background Type</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <Select value={bgType} onValueChange={(v) => setBgType(v as "solid" | "gradient" | "image")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="solid">Solid Color</SelectItem><SelectItem value="gradient">Gradient</SelectItem><SelectItem value="image">Image</SelectItem></SelectContent></Select>
+                      <Select value={bgType} onValueChange={(v) => setBgType(v as "solid" | "gradient" | "image")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="solid">Solid Color</SelectItem><SelectItem value="gradient">Gradient</SelectItem><SelectItem value="image">Image</SelectItem><SelectItem value="video">Video</SelectItem></SelectContent></Select>
                       {bgType === "solid" && <div className="space-y-2"><Label>Color</Label><div className="flex gap-2"><Input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-12 h-10 p-1" /><Input value={bgColor} onChange={(e) => setBgColor(e.target.value)} /></div></div>}
                       {bgType === "gradient" && <>
                         <div className="space-y-2"><Label>Angle: {bgGradientAngle}</Label><Slider value={bgGradientAngle} onValueChange={(v) => setBgGradientAngle(Array.isArray(v) ? v[0] : v)} min={0} max={360} step={5} /></div>
                         <div className="space-y-2"><Label>Start Color</Label><div className="flex gap-2"><Input type="color" value={bgGradientStart} onChange={(e) => setBgGradientStart(e.target.value)} className="w-12 h-10 p-1" /><Input value={bgGradientStart} onChange={(e) => setBgGradientStart(e.target.value)} /></div></div>
                         <div className="space-y-2"><Label>End Color</Label><div className="flex gap-2"><Input type="color" value={bgGradientEnd} onChange={(e) => setBgGradientEnd(e.target.value)} className="w-12 h-10 p-1" /><Input value={bgGradientEnd} onChange={(e) => setBgGradientEnd(e.target.value)} /></div></div>
                       </>}
+                      {bgType === "image" && <div className="space-y-2"><Label>Image URL</Label><Input value={bgImageUrl} onChange={(e) => setBgImageUrl(e.target.value)} placeholder="https://..." /></div>}
+                      {bgType === "video" && <div className="space-y-2"><Label>Video URL</Label><Input value={bgVideoUrl} onChange={(e) => setBgVideoUrl(e.target.value)} placeholder="https://...mp4" /></div>}
                     </CardContent></Card>
-                    <Card><CardHeader><CardTitle className="text-sm">Quick Colors</CardTitle></CardHeader><CardContent className="space-y-4">
-                      <Label>Preset Colors</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {quickColors.map((color, idx) => (
-                          <button key={idx} className="w-8 h-8 rounded border border-border hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => { setBgColor(color); setRecentColors([color, ...recentColors.filter(c => c !== color)].slice(0, 8)); }} title={color} />
-                        ))}
-                      </div>
-                      <Label>Recent Colors</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {recentColors.length > 0 ? recentColors.map((color, idx) => (
-                          <button key={idx} className="w-8 h-8 rounded border border-border hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => setBgColor(color)} title={color} />
-                        )) : <span className="text-xs text-muted-foreground">No recent colors</span>}
-                      </div>
+                    <Card><CardHeader><CardTitle className="text-sm">Background Effects</CardTitle></CardHeader><CardContent className="space-y-4">
+                      <div className="space-y-2"><Label>Opacity: {bgOpacity}%</Label><Slider value={[bgOpacity]} onValueChange={(v) => setBgOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
+                      <div className="space-y-2"><Label>Blur: {bgBlur}px</Label><Slider value={[bgBlur]} onValueChange={(v) => setBgBlur(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
+                      {(bgType === "video" || bgType === "image") && <>
+                        <div className="space-y-2"><Label>Video Opacity: {bgVideoOpacity}%</Label><Slider value={[bgVideoOpacity]} onValueChange={(v) => setBgVideoOpacity(Array.isArray(v) ? v[0] : v)} min={0} max={100} step={5} /></div>
+                        <div className="space-y-2"><Label>Video Speed: {bgVideoSpeed}x</Label><Slider value={[bgVideoSpeed * 10]} onValueChange={(v) => setBgVideoSpeed((Array.isArray(v) ? v[0] : v) / 10)} min={5} max={20} step={1} /></div>
+                      </>}
+                      <div className="space-y-2"><Label>Y Offset: {bgY}</Label><Slider value={[bgY + 50]} onValueChange={(v) => setBgY((Array.isArray(v) ? v[0] : v) - 50)} min={0} max={100} step={1} /></div>
                     </CardContent></Card>
                   </div>
+                  <Card><CardHeader><CardTitle className="text-sm">Quick Colors</CardTitle></CardHeader><CardContent className="space-y-4">
+                    <Label>Preset Colors</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {quickColors.map((color, idx) => (
+                        <button key={idx} className="w-8 h-8 rounded border border-border hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => { setBgColor(color); setRecentColors([color, ...recentColors.filter(c => c !== color)].slice(0, 8)); }} title={color} />
+                      ))}
+                    </div>
+                    <Label>Recent Colors</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {recentColors.length > 0 ? recentColors.map((color, idx) => (
+                        <button key={idx} className="w-8 h-8 rounded border border-border hover:scale-110 transition-transform" style={{ backgroundColor: color }} onClick={() => setBgColor(color)} title={color} />
+                      )) : <span className="text-xs text-muted-foreground">No recent colors</span>}
+                    </div>
+                  </CardContent></Card>
                 </TabsContent>
 
                 <TabsContent value="display" className="space-y-4 mt-4">
@@ -776,11 +802,19 @@ export default function PanelPage() {
                 <TabsContent value="reference" className="space-y-4 mt-4">
                   <Card><CardHeader><CardTitle className="text-sm">Reference Display</CardTitle></CardHeader><CardContent className="space-y-4">
                     <div className="flex items-center justify-between"><Label>Show Reference</Label><Switch checked={showRef} onCheckedChange={setShowRef} /></div>
-                    {showRef && <>
-                      <div className="space-y-2"><Label>Font Size: {refFontSize}px</Label><Slider value={refFontSize} onValueChange={(v) => setRefFontSize(Array.isArray(v) ? v[0] : v)} min={12} max={48} step={1} /></div>
+                    {showRef && <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2"><Label>Font Size: {refFontSize}pt</Label><Slider value={[refFontSize]} onValueChange={(v) => setRefFontSize(Array.isArray(v) ? v[0] : v)} min={10} max={48} step={1} /></div>
+                      <div className="space-y-2"><Label>Line Height: {refLineHeight}</Label><Slider value={refLineHeight * 50} onValueChange={(v) => setRefLineHeight((Array.isArray(v) ? v[0] : v) / 50)} min={80} max={180} step={5} /></div>
+                      <div className="space-y-2"><Label>Word Spacing: {refWordSpacing}px</Label><Slider value={[refWordSpacing + 5]} onValueChange={(v) => setRefWordSpacing((Array.isArray(v) ? v[0] : v) - 5)} min={0} max={10} step={1} /></div>
+                      <div className="space-y-2"><Label>Letter Spacing: {refLetterSpacing}px</Label><Slider value={[refLetterSpacing + 2]} onValueChange={(v) => setRefLetterSpacing((Array.isArray(v) ? v[0] : v) - 2)} min={0} max={5} step={1} /></div>
+                      <div className="space-y-2"><Label>Opacity: {refOpacity}%</Label><Slider value={[refOpacity]} onValueChange={(v) => setRefOpacity(Array.isArray(v) ? v[0] : v)} min={20} max={100} step={5} /></div>
+                      <div className="space-y-2"><Label>Border Width: {refBorderWidth}px</Label><Slider value={[refBorderWidth]} onValueChange={(v) => setRefBorderWidth(Array.isArray(v) ? v[0] : v)} min={0} max={5} step={1} /></div>
+                      <div className="space-y-2"><Label>Border Radius: {refBorderRadius}px</Label><Slider value={[refBorderRadius]} onValueChange={(v) => setRefBorderRadius(Array.isArray(v) ? v[0] : v)} min={0} max={20} step={1} /></div>
+                    </div>}
+                    {showRef && <div className="space-y-3">
                       <div className="space-y-2"><Label>Text Transform</Label><Select value={refTextTransform} onValueChange={(v) => setRefTextTransform(v as "none" | "uppercase")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem><SelectItem value="uppercase">Uppercase</SelectItem></SelectContent></Select></div>
                       <div className="space-y-2"><Label>Align</Label><div className="flex gap-1"><Button variant={refHAlign === "left" ? "secondary" : "outline"} size="icon" onClick={() => setRefHAlign("left")}><AlignLeft className="h-4 w-4" /></Button><Button variant={refHAlign === "center" ? "secondary" : "outline"} size="icon" onClick={() => setRefHAlign("center")}><AlignCenter className="h-4 w-4" /></Button><Button variant={refHAlign === "right" ? "secondary" : "outline"} size="icon" onClick={() => setRefHAlign("right")}><AlignRight className="h-4 w-4" /></Button></div></div>
-                    </>}
+                    </div>}
                   </CardContent></Card>
                 </TabsContent>
 
