@@ -60,12 +60,22 @@ interface SceneSource {
   name: string;
   type: "text" | "image" | "video" | "camera" | "audio";
   visible: boolean;
+  locked: boolean;
+  color?: string;
 }
 
 interface AnnotationTool {
   id: string;
   name: string;
   icon: string;
+}
+
+interface ScheduleItem {
+  id: string;
+  type: "song" | "bible";
+  itemId: string;
+  title: string;
+  order: number;
 }
 
 const BIBLE_BOOKS: BibleBook[] = [
@@ -279,6 +289,83 @@ export default function PanelPage() {
 
   const [quickColors] = useState(["#111CB0", "#AD0000", "#000000", "#FFD500", "#008000", "#800080", "#FF6600", "#008080"]);
   const [recentColors, setRecentColors] = useState<string[]>([]);
+
+  // Schedule/Setlist
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
+
+  // Editor mode
+  const [editorMode, setEditorMode] = useState<"text" | "buttons">("buttons");
+
+  // Dual Bible
+  const [dualBibleEnabled, setDualBibleEnabled] = useState(false);
+  const [dualPrimaryVersion, setDualPrimaryVersion] = useState("kjv");
+  const [dualSecondaryVersion, setDualSecondaryVersion] = useState("nlt");
+
+  // Annotation stroke
+  const [annotationColor, setAnnotationColor] = useState("#111CB0");
+  const [annotationStroke, setAnnotationStroke] = useState(3);
+
+  // Pinned references
+  const [pinnedRef, setPinnedRef] = useState<{book: string; chapter: number; verses?: string} | null>(null);
+  const [recentRefs, setRecentRefs] = useState<{book: string; chapter: number; verses?: string}[]>([]);
+
+  // Full Screen Mode Settings
+  const [fsFontSize, setFsFontSize] = useState(40);
+  const [fsRefFontSize, setFsRefFontSize] = useState(32);
+  const [fsLineHeight, setFsLineHeight] = useState(1.2);
+  const [fsWordSpacing, setFsWordSpacing] = useState(0);
+  const [fsLetterSpacing, setFsLetterSpacing] = useState(0);
+  const [fsPaddingLR, setFsPaddingLR] = useState(10);
+  const [fsPaddingTB, setFsPaddingTB] = useState(5);
+  const [fsTextX, setFsTextX] = useState(0);
+  const [fsTextY, setFsTextY] = useState(0);
+  const [fsWidthPct, setFsWidthPct] = useState(100);
+  const [fsScalePct, setFsScalePct] = useState(100);
+  const [fsBorderRadius, setFsBorderRadius] = useState(0);
+  const [fsShadowOpacity, setFsShadowOpacity] = useState(0);
+  const [fsShadowBlur, setFsShadowBlur] = useState(10);
+  const [fsShadowOffset, setFsShadowOffset] = useState(5);
+
+  // Lowerthird Mode Settings
+  const [ltFontSize, setLtFontSize] = useState(36);
+  const [ltRefFontSize, setLtRefFontSize] = useState(24);
+  const [ltLineHeight, setLtLineHeight] = useState(1.1);
+  const [ltWordSpacing, setLtWordSpacing] = useState(0);
+  const [ltLetterSpacing, setLtLetterSpacing] = useState(0);
+  const [ltPaddingLR, setLtPaddingLR] = useState(8);
+  const [ltPaddingTB, setLtPaddingTB] = useState(3);
+  const [ltTextX, setLtTextX] = useState(0);
+  const [ltTextY, setLtTextY] = useState(0);
+  const [ltWidthPct, setLtWidthPct] = useState(80);
+  const [ltScalePct, setLtScalePct] = useState(100);
+  const [ltBorderRadius, setLtBorderRadius] = useState(10);
+  const [ltShadowOpacity, setLtShadowOpacity] = useState(30);
+  const [ltShadowBlur, setLtShadowBlur] = useState(15);
+  const [ltShadowOffset, setLtShadowOffset] = useState(8);
+
+  // Background Settings
+  const [bgVideoOpacity, setBgVideoOpacity] = useState(100);
+  const [bgVideoSpeed, setBgVideoSpeed] = useState(1);
+  const [bgY, setBgY] = useState(0);
+  const [bgImageUrl, setBgImageUrl] = useState("");
+  const [bgVideoUrl, setBgVideoUrl] = useState("");
+
+  // Reference Settings
+  const [refLineHeight, setRefLineHeight] = useState(1.1);
+  const [refWordSpacing, setRefWordSpacing] = useState(0);
+  const [refLetterSpacing, setRefLetterSpacing] = useState(0);
+  const [refOpacity, setRefOpacity] = useState(80);
+  const [refBorderWidth, setRefBorderWidth] = useState(0);
+  const [refBorderRadius, setRefBorderRadius] = useState(0);
+
+  // Display mode
+  const [displayMode, setDisplayMode] = useState<"full" | "lt" | "custom">("full");
+
+  // Scenes
+  const [scenes, setScenes] = useState<Scene[]>([
+    { id: "scene-1", name: "Scene 1", type: "blank" },
+    { id: "scene-2", name: "Scene 2", type: "blank" },
+  ]);
 
   const filteredBooks = BIBLE_BOOKS.filter(book =>
     book.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
