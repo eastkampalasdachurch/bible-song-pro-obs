@@ -9,7 +9,7 @@
     "build:electron": "tsc -p tsconfig.electron.json",
     "start": "next start",
     "lint": "eslint",
-    "electron:dev": "bun run build && bun run build:electron && bun run dev &",
+    "electron:dev": "powershell -File scripts/start-electron-dev.ps1",
     "electron:start": "bun run build:electron && npx electron .",
     "electron:build": "bun run build && bun run build:electron && npx electron-builder --win portable"
   },
