@@ -195,10 +195,16 @@ const ANNOTATION_TOOLS: AnnotationTool[] = [
 ];
 
 const BIBLE_VERSIONS = [
-  { id: "kjv", name: "King James Version (KJV)" },
-  { id: "niv", name: "New International Version (NIV)" },
-  { id: "esv", name: "English Standard Version (ESV)" },
-  { id: "nlt", name: "New Living Translation (NLT)" },
+  { id: "KJV", name: "King James Version (KJV)" },
+  { id: "NIV", name: "New International Version (NIV)" },
+  { id: "ESV", name: "English Standard Version (ESV)" },
+  { id: "NLT", name: "New Living Translation (NLT)" },
+  { id: "NASB", name: "New American Standard Bible (NASB)" },
+  { id: "NKJV", name: "New King James Version (NKJV)" },
+  { id: "CSB", name: "Christian Standard Bible (CSB)" },
+  { id: "AMP", name: "Amplified Bible (AMP)" },
+  { id: "MSG", name: "The Message (MSG)" },
+  { id: "NRSV", name: "New Revised Standard Version (NRSV)" },
 ];
 
 type ToolbarTab = "bible" | "songs" | "scenes" | "media" | "audio" | "schedule" | "host" | "annotate";
@@ -1387,7 +1393,14 @@ export default function PanelPage() {
                 {getContentTitle() ? (
                   <div className="space-y-4">
                     <div className="rounded-lg p-8 text-center min-h-[300px] flex items-center justify-center" style={{ background: bgType === "gradient" ? `linear-gradient(${bgGradientAngle}deg, ${bgGradientStart}, ${bgGradientEnd})` : bgColor, opacity: bgOpacity / 100, width: `${displayWidth}%`, borderRadius: `${displayRadius}px`, margin: '0 auto', transform: `scale(${displayScale / 100})`, transformOrigin: displayAnchor === 'top' ? 'top center' : 'bottom center' }}>
-                      <div className="text-white" style={{ fontSize: `${fontSize}px`, lineHeight: lineSpacing, textTransform: textTransform, textAlign: hAlign }}>{getPreviewContent().split('\n').map((line, i) => <p key={i}>{line}</p>)}</div>
+                      {isFetchingLyrics ? (
+                        <div className="text-white flex items-center gap-2">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                          Loading Bible content...
+                        </div>
+                      ) : (
+                        <div className="text-white" style={{ fontSize: `${fontSize}px`, lineHeight: lineSpacing, textTransform: textTransform, textAlign: hAlign }}>{getPreviewContent().split('\n').map((line, i) => <p key={i}>{line}</p>)}</div>
+                      )}
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
