@@ -39,6 +39,7 @@ const http = __importStar(require("http"));
 const path = __importStar(require("path"));
 const os = __importStar(require("os"));
 const fs = __importStar(require("fs"));
+const child_process_1 = require("child_process");
 const ws_1 = require("ws");
 let mainWindow = null;
 let outputWindow = null;
@@ -323,6 +324,14 @@ electron_1.app.on('window-all-closed', () => {
             relayServer.close();
         }
         catch (e) { /* empty */ }
+    }
+    // Kill Next.js dev server
+    if (process.platform === 'win32') {
+        (0, child_process_1.spawn)('taskkill', ['/F', '/PID', process.pid.toString()], { shell: true, detached: true });
+        (0, child_process_1.spawn)('cmd', ['/c', 'taskkill', '/F', '/IM', 'node.exe'], { shell: true, detached: true });
+    }
+    else {
+        process.kill(-process.pid);
     }
     if (process.platform !== 'darwin') {
         electron_1.app.quit();
