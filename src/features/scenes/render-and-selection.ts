@@ -1229,7 +1229,7 @@
         if (bgUploadDataUrl != null) settings.bgUploadDataUrl = bgUploadDataUrl;
         if (bgVideoUploadDataUrl != null) settings.bgVideoUploadDataUrl = bgVideoUploadDataUrl;
         const backup = {
-          app: 'Bible Song Pro',
+          app: 'SDA Bible Song Pro',
           backupVersion: 1,
           exportedAt: new Date().toISOString(),
           data: {

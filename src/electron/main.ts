@@ -148,7 +148,7 @@ function createMainWindow(): void {
     minWidth: 560,
     minHeight: 760,
     backgroundColor: '#101318',
-    title: 'Bible Song Pro',
+    title: 'SDA Bible Song Pro',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -157,7 +157,7 @@ function createMainWindow(): void {
     }
   });
 
-  mainWindow.loadFile(resolveAppFile('Bible Song Pro panel.html'));
+  mainWindow.loadFile(resolveAppFile('panel.html'));
   mainWindow.on('closed', () => {
     mainWindow = null;
     if (outputWindow && !outputWindow.isDestroyed()) {
