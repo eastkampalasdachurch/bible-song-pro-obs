@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { 
+import {
   Settings, Play, Square as SquareIcon, ChevronLeft, ChevronRight, ChevronUp, ChevronDown,
   Plus, Search, Music, Book, Calendar, Monitor,
   Volume2, Type, Image, Layers, Video, Mic,
@@ -25,7 +25,7 @@ import {
   Maximize2, Minimize2, RotateCw, Move, ZoomIn, ZoomOut,
   Settings2, Palette, Pen, Eraser, Highlighter, Undo2, Redo2,
   Wifi, WifiOff, Circle, ArrowUp, VideoIcon, Radio, CircleDot,
-  Pencil, Type as TypeIcon, Minus, Trash, RefreshCw
+  Pencil, Type as TypeIcon, Minus, Trash, RefreshCw, Lock, Unlock
 } from "lucide-react";
 
 interface ContentItem {
@@ -52,13 +52,13 @@ interface Song {
 interface Scene {
   id: string;
   name: string;
-  type: "song" | "bible" | "image" | "blank";
+  sources: SceneSource[];
 }
 
 interface SceneSource {
   id: string;
   name: string;
-  type: "text" | "image" | "video" | "camera" | "audio";
+  type: "text" | "image" | "video" | "camera" | "audio" | "media-source" | "audio-input" | "ndi";
   visible: boolean;
   locked: boolean;
   color?: string;
@@ -171,10 +171,10 @@ const DEFAULT_SONGS: Song[] = [
 ];
 
 const SCENES: Scene[] = [
-  { id: "scene-1", name: "Main (Song)", type: "song" },
-  { id: "scene-2", name: "Bible Reading", type: "bible" },
-  { id: "scene-3", name: "Announcement", type: "image" },
-  { id: "scene-4", name: "Blank", type: "blank" },
+  { id: "scene-1", name: "Main (Song)", sources: [] },
+  { id: "scene-2", name: "Bible Reading", sources: [] },
+  { id: "scene-3", name: "Announcement", sources: [] },
+  { id: "scene-4", name: "Blank", sources: [] },
 ];
 
 const DEFAULT_SOURCES: SceneSource[] = [
@@ -247,6 +247,68 @@ export default function PanelPage() {
   const [verseEnd, setVerseEnd] = useState<number | null>(null);
   const [selectedScene, setSelectedScene] = useState<Scene | null>(null);
   const [bibleVersion, setBibleVersion] = useState("kjv");
+
+  // Source management functions
+  const getSourceTypeColor = (type: string) => {
+    const colors: Record<string, string> = {
+      'camera': '#60a5fa',
+      'audio-input': '#f472b6',
+      'media-source': '#fb923c',
+      'ndi': '#a78bfa',
+      'image': '#34d399',
+      'text': '#38bdf8',
+      'video': '#8b5cf6'
+    };
+    return colors[type] || '#6b7280';
+  };
+
+  const addSourceToScene = (sceneId: string, type: SceneSource['type']) => {
+    const sourceId = `source-${Date.now()}`;
+    const source: SceneSource = {
+      id: sourceId,
+      name: `${type.charAt(0).toUpperCase() + type.slice(1)} Source`,
+      type,
+      visible: true,
+      locked: false,
+      color: getSourceTypeColor(type)
+    };
+
+    setScenes(scenes.map(scene =>
+      scene.id === sceneId
+        ? { ...scene, sources: [...scene.sources, source] }
+        : scene
+    ));
+  };
+
+  const toggleSourceVisibility = (sceneId: string, sourceId: string) => {
+    setScenes(scenes.map(scene =>
+      scene.id === sceneId
+        ? {
+            ...scene,
+            sources: scene.sources.map(source =>
+              source.id === sourceId
+                ? { ...source, visible: !source.visible }
+                : source
+            )
+          }
+        : scene
+    ));
+  };
+
+  const toggleSourceLock = (sceneId: string, sourceId: string) => {
+    setScenes(scenes.map(scene =>
+      scene.id === sceneId
+        ? {
+            ...scene,
+            sources: scene.sources.map(source =>
+              source.id === sourceId
+                ? { ...source, locked: !source.locked }
+                : source
+            )
+          }
+        : scene
+    ));
+  };
 
   const [lineCursor, setLineCursor] = useState(0);
   const [linesPerPage, setLinesPerPage] = useState(2);
@@ -412,8 +474,8 @@ export default function PanelPage() {
 
   // Scenes
   const [scenes, setScenes] = useState<Scene[]>([
-    { id: "scene-1", name: "Scene 1", type: "blank" },
-    { id: "scene-2", name: "Scene 2", type: "blank" },
+    { id: "scene-1", name: "Scene 1", sources: [] },
+    { id: "scene-2", name: "Scene 2", sources: [] },
   ]);
 
   const filteredBooks = BIBLE_BOOKS.filter(book =>
@@ -950,14 +1012,63 @@ export default function PanelPage() {
 
         {activeTab === "scenes" && (
           <aside className="w-80 border-r border-border bg-card flex flex-col">
-            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Scenes</span><Button variant="outline" size="sm" onClick={() => { const num = scenes.length + 1; setScenes([...scenes, { id: `scene-${num}`, name: `Scene ${num}`, type: "blank" as const }]); }}><Plus className="h-3 w-3" /></Button></div>
+            <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Scenes</span><Button variant="outline" size="sm" onClick={() => { const num = scenes.length + 1; setScenes([...scenes, { id: `scene-${num}`, name: `Scene ${num}`, sources: [] }]); }}><Plus className="h-3 w-3" /></Button></div>
             <ScrollArea className="flex-1">
-              <div className="p-2 space-y-1">
+              <div className="p-2 space-y-2">
                 {scenes.map((scene) => (
-                  <div key={scene.id} className={`flex items-center gap-2 p-2 rounded cursor-pointer ${activeSceneId === scene.id ? "bg-secondary" : "hover:bg-accent/10"}`} onClick={() => setActiveSceneId(scene.id)}>
-                    <LayersIcon className="h-4 w-4" />
-                    <span className="flex-1 text-sm">{scene.name}</span>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); setScenes(scenes.filter(s => s.id !== scene.id)); }}><Trash2 className="h-3 w-3" /></Button>
+                  <div key={scene.id} className="border rounded-lg p-2">
+                    <div className={`flex items-center gap-2 p-2 rounded cursor-pointer ${activeSceneId === scene.id ? "bg-secondary" : "hover:bg-accent/10"}`} onClick={() => setActiveSceneId(scene.id)}>
+                      <LayersIcon className="h-4 w-4" />
+                      <span className="flex-1 text-sm font-medium">{scene.name}</span>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); setScenes(scenes.filter(s => s.id !== scene.id)); }}><Trash2 className="h-3 w-3" /></Button>
+                    </div>
+                    <div className="mt-2 space-y-1">
+                      <div className="text-xs text-muted-foreground mb-1">Sources ({scene.sources.length})</div>
+                      {scene.sources.map((source) => (
+                        <div key={source.id} className="flex items-center gap-2 p-1 rounded text-xs">
+                          <div
+                            className="w-3 h-3 rounded"
+                            style={{ backgroundColor: source.color || getSourceTypeColor(source.type) }}
+                          ></div>
+                          <span className="flex-1 truncate">{source.name}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-4 w-4"
+                            onClick={() => toggleSourceVisibility(scene.id, source.id)}
+                          >
+                            {source.visible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-4 w-4"
+                            onClick={() => toggleSourceLock(scene.id, source.id)}
+                          >
+                            {source.locked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+                          </Button>
+                        </div>
+                      ))}
+                      <div className="flex gap-1 mt-2">
+                        {[
+                          { type: "text", icon: TypeIcon, label: "Text" },
+                          { type: "image", icon: Image, label: "Image" },
+                          { type: "camera", icon: Video, label: "Camera" },
+                          { type: "audio", icon: Mic, label: "Audio" },
+                        ].map(({ type, icon: Icon, label }) => (
+                          <Button
+                            key={type}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 h-6 text-xs"
+                            onClick={() => addSourceToScene(scene.id, type as any)}
+                          >
+                            <Icon className="h-3 w-3 mr-1" />
+                            {label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
