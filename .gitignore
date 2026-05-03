@@ -2,9 +2,11 @@
 
 node_modules/
 dist/
-
 .next/
 ts-dist/
+
+# Package lock - use bun
+package-lock.json
 
 # Build outputs
 *.log
