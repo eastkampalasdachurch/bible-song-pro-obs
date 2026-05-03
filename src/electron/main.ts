@@ -4,9 +4,8 @@ import * as http from 'http';
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
+import { spawn } from 'child_process';
 import { WebSocketServer, WebSocket } from 'ws';
-
-interface DisplayInfo {
   id: number;
   label: string;
   width: number;
@@ -343,6 +342,15 @@ app.on('window-all-closed', () => {
   if (relayServer) {
     try { relayServer.close(); } catch (e) { /* empty */ }
   }
+  
+  // Kill Next.js dev server
+  if (process.platform === 'win32') {
+    spawn('taskkill', ['/F', '/PID', process.pid.toString()], { shell: true, detached: true });
+    spawn('cmd', ['/c', 'taskkill', '/F', '/IM', 'node.exe'], { shell: true, detached: true });
+  } else {
+    process.kill(-process.pid);
+  }
+  
   if (process.platform !== 'darwin') {
     app.quit();
   }
