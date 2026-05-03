@@ -487,9 +487,10 @@ export default function PanelPage() {
   // Load chapter when book and chapter are selected
   useEffect(() => {
     if (selectedBook && selectedChapter) {
-      loadChapter(selectedBook, selectedChapter);
+      const verses = verseStart ? { start: verseStart, end: verseEnd || verseStart } : undefined;
+      loadChapter(selectedBook, selectedChapter, verses);
     }
-  }, [selectedBook, selectedChapter, bibleVersion]);
+  }, [selectedBook, selectedChapter, verseStart, verseEnd, bibleVersion]);
 
   // Save songs to localStorage
   useEffect(() => {
@@ -621,9 +622,12 @@ export default function PanelPage() {
         // Parse the complex content structure from bible.helloao.org
         const chapterVerses = chapterData.chapter.content.filter((item: any) => item.type === 'verse');
 
+        console.log(`Filtering verses (helloao.org): start=${startVerse}, end=${endVerse}, total verses=${chapterVerses.length}`);
+
         for (let i = startVerse - 1; i < Math.min(endVerse, chapterVerses.length); i++) {
           const verse = chapterVerses[i];
           if (verse && verse.content) {
+            console.log(`Adding verse ${verse.number}: ${JSON.stringify(verse.content).substring(0, 100)}...`);
             // Extract text from verse content array
             let verseText = '';
             if (Array.isArray(verse.content)) {
@@ -643,15 +647,18 @@ export default function PanelPage() {
 
         setFetchedLyrics([content.trim()]);
         setLineCursor(0);
-      } else if (chapterData && chapterData.verses && Array.isArray(chapterData.verses)) {
+      } else       if (chapterData && chapterData.verses && Array.isArray(chapterData.verses)) {
         // bible-api.com fallback format
         let content = '';
         const startVerse = verses?.start || 1;
-        const endVerse = verses?.end || chapterData.verses.length;
+        const endVerse = verses?.end || (verses?.start ? verses.start : chapterData.verses.length);
+
+        console.log(`Filtering verses: start=${startVerse}, end=${endVerse}, total verses=${chapterData.verses.length}`);
 
         for (let i = startVerse - 1; i < Math.min(endVerse, chapterData.verses.length); i++) {
           const verse = chapterData.verses[i];
           if (verse && verse.text) {
+            console.log(`Adding verse ${verse.verse}: ${verse.text.substring(0, 50)}...`);
             content += verse.text.replace(/\n/g, ' ').trim() + ' ';
           }
         }
@@ -1312,10 +1319,10 @@ export default function PanelPage() {
           <aside className="w-80 border-r border-border bg-card flex flex-col">
             <div className="p-3 border-b flex items-center justify-between"><span className="font-medium">Annotation Tools</span><Button variant="outline" size="sm" title="Clear all" onClick={() => setAnnotations([])}><Eraser className="h-3 w-3" /></Button></div>
             <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Tools</CardTitle></CardHeader><CardContent><div className="grid grid-cols-4 gap-2">
-              <Button variant={selectedAnnotationTool === "pen" ? "secondary" : "outline"} size="icon" title="Pen" onClick={() => setSelectedAnnotationTool("pen")}><Pen className="h-4 w-4" /></Button>
-              <Button variant={selectedAnnotationTool === "highlighter" ? "secondary" : "outline"} size="icon" title="Highlighter" onClick={() => setSelectedAnnotationTool("highlighter")}><Highlighter className="h-4 w-4" /></Button>
-              <Button variant={selectedAnnotationTool === "eraser" ? "secondary" : "outline"} size="icon" title="Eraser" onClick={() => setSelectedAnnotationTool("eraser")}><Eraser className="h-4 w-4" /></Button>
-              <Button variant={selectedAnnotationTool === "text" ? "secondary" : "outline"} size="icon" title="Text" onClick={() => setSelectedAnnotationTool("text")}><TypeIcon className="h-4 w-4" /></Button>
+              <Button variant={selectedAnnotationTool === "pen" ? "secondary" : "outline"} size="icon" title="Pen" onClick={() => { setSelectedAnnotationTool("pen"); console.log("Pen tool selected"); }}><Pen className="h-4 w-4" /></Button>
+              <Button variant={selectedAnnotationTool === "highlighter" ? "secondary" : "outline"} size="icon" title="Highlighter" onClick={() => { setSelectedAnnotationTool("highlighter"); console.log("Highlighter tool selected"); }}><Highlighter className="h-4 w-4" /></Button>
+              <Button variant={selectedAnnotationTool === "eraser" ? "secondary" : "outline"} size="icon" title="Eraser" onClick={() => { setSelectedAnnotationTool("eraser"); console.log("Eraser tool selected"); }}><Eraser className="h-4 w-4" /></Button>
+              <Button variant={selectedAnnotationTool === "text" ? "secondary" : "outline"} size="icon" title="Text" onClick={() => { setSelectedAnnotationTool("text"); console.log("Text tool selected"); }}><TypeIcon className="h-4 w-4" /></Button>
             </div></CardContent></Card>
             <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Color</CardTitle></CardHeader><CardContent><div className="flex gap-1 flex-wrap">{quickColors.map(c => <Button key={c} variant={annotationColor === c ? "secondary" : "outline"} size="icon" className="w-6 h-6" style={{backgroundColor: c}} onClick={() => setAnnotationColor(c)} />)}</div></CardContent></Card>
             <Card className="m-2"><CardHeader className="pb-2"><CardTitle className="text-sm">Stroke: {annotationStroke}px</CardTitle></CardHeader><CardContent><Slider value={[annotationStroke]} onValueChange={(v) => setAnnotationStroke(Array.isArray(v) ? v[0] : v)} min={1} max={20} step={1} /></CardContent></Card>
