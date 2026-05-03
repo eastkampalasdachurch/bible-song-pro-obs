@@ -338,7 +338,8 @@ export default function PanelPage() {
   // Editor mode
   const [editorMode, setEditorMode] = useState<"text" | "buttons">("buttons");
   const [animationPreset, setAnimationPreset] = useState("none");
-  const [showAnimationModal, setShowAnimationModal] = useState(false);
+   const [showAnimationModal, setShowAnimationModal] = useState(false);
+   const [showPresetPopover, setShowPresetPopover] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // Dual Bible
@@ -558,6 +559,41 @@ export default function PanelPage() {
               {["none", "fade", "slide-left", "slide-right", "pop", "zoom", "blur", "roll"].map((preset) => (
                 <Button key={preset} variant={animationPreset === preset ? "secondary" : "outline"} className="h-20 capitalize" onClick={() => setAnimationPreset(preset)}>{preset.replace("-", " ")}</Button>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {showPresetPopover && (
+        <div className="fixed inset-0 z-40" onClick={() => setShowPresetPopover(false)}>
+          <div className="absolute top-16 right-32 bg-card border rounded-lg shadow-lg p-4 min-w-[280px]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold">Animation Presets</h3>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowPresetPopover(false)}><X className="h-4 w-4" /></Button>
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs">Transition</Label>
+                <Select value={transitionType} onValueChange={(v) => setTransitionType(v as "none" | "fade" | "slide" | "dissolve")}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="fade">Fade</SelectItem>
+                    <SelectItem value="slide">Slide</SelectItem>
+                    <SelectItem value="dissolve">Dissolve</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label className="text-xs">Duration</Label>
+                  <span className="text-xs text-muted-foreground">{transitionDuration}s</span>
+                </div>
+                <Slider value={transitionDuration * 100} onValueChange={(v) => setTransitionDuration((Array.isArray(v) ? v[0] : v) / 100)} min={25} max={200} step={5} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Animate Background</Label>
+                <Switch checked={false} />
+              </div>
             </div>
           </div>
         </div>
@@ -799,7 +835,9 @@ export default function PanelPage() {
               <Button variant={editorMode === "buttons" ? "secondary" : "ghost"} size="sm" className="h-7 px-2 text-xs" onClick={() => setEditorMode("buttons")}>Buttons</Button>
             </div>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleImportSongs} title="Import songs"><Upload className="h-4 w-4" /></Button>
-            <Button variant="outline" size="sm" className="h-8 text-xs font-serif italic" title="Animation presets" onClick={() => setShowAnimationModal(true)}>fx</Button>
+            <Button variant="outline" size="sm" className="h-8 text-xs font-serif italic" title="Animation presets" onClick={() => setShowPresetPopover(!showPresetPopover)}>fx</Button>
+            <Button variant="outline" size="icon" className="h-8 w-8" title="Annotate" onClick={() => setActiveTab("annotate")}><Pen className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="h-8 w-8" title="Dual Bible" onClick={() => setDualBibleEnabled(!dualBibleEnabled)}><Book className="h-4 w-4" /></Button>
             <Button variant="outline" size="sm" onClick={handleClear}><X className="h-4 w-4 mr-1" /></Button>
             <Button variant={isLive ? "destructive" : "default"} size="sm" onClick={handleGoLive}>
               {isLive ? <SquareIcon className="h-4 w-4 mr-1" /> : <Play className="h-4 w-4 mr-1" />}
