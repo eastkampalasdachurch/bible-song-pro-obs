@@ -3,7 +3,7 @@ import * as http from 'http';
 
 const PORT = Number.parseInt(process.env.FEEDBACK_PORT || '8787', 10);
 const GITHUB_TOKEN = String(process.env.GITHUB_TOKEN || '').trim();
-const GITHUB_REPO = String(process.env.GITHUB_REPO || 'Johnbatey/bible-song-pro-obs').trim();
+const GITHUB_REPO = String(process.env.GITHUB_REPO || 'eastkampalasdachurch/bible-song-pro-obs').trim();
 const ALLOWED_ORIGIN = String(process.env.FEEDBACK_ALLOWED_ORIGIN || '*').trim() || '*';
 
 interface JsonResponse {

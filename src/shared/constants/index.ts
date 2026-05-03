@@ -6,9 +6,9 @@ export const HOST_MODE_OBS = 'obs';
 export const HOST_MODE_VMIX = 'vmix';
 export const HOST_MODE_STANDALONE = 'standalone';
 
-export const BSP_GITHUB_REPO_URL = 'https://github.com/Johnbatey/bible-song-pro-obs';
+export const BSP_GITHUB_REPO_URL = 'https://github.com/eastkampalasdachurch/bible-song-pro-obs';
 export const BSP_GITHUB_ISSUES_URL = `${BSP_GITHUB_REPO_URL}/issues`;
-export const BSP_CONTACT_URL = 'https://www.instagram.com/johnsonolakotan';
+export const BSP_CONTACT_URL = 'https://www.instagram.com/eastkampalasdachurch';
 export const BSP_LEGACY_LOCAL_FEEDBACK_API_URL = 'http://127.0.0.1:8787/api/github-feedback';
 export const BSP_DEFAULT_FEEDBACK_API_URL = 'https://bible-song-pro-feedback.johnbatey-bsp.workers.dev/api/github-feedback';
 
